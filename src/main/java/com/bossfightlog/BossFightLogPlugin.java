@@ -1,6 +1,7 @@
 package com.bossfightlog;
 
 import com.google.inject.Provides;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -16,6 +17,9 @@ import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.ui.ClientToolbar;
+import net.runelite.client.ui.NavigationButton;
+import net.runelite.client.util.ImageUtil;
 
 @Slf4j
 @PluginDescriptor(
@@ -31,7 +35,13 @@ public class BossFightLogPlugin extends Plugin
 	@Inject
 	private FightTracker fightTracker;
 
+	@Inject
+	private ClientToolbar clientToolbar;
+
 	private final List<BossFight> fights = new ArrayList<>();
+
+	private BossFightLogPanel panel;
+	private NavigationButton navButton;
 
 	@Override
 	protected void startUp() throws Exception
@@ -39,6 +49,19 @@ public class BossFightLogPlugin extends Plugin
 		fights.clear();
 		fightTracker.reset();
 		fightTracker.setFightListener(this::onFightComplete);
+
+		panel = new BossFightLogPanel();
+		panel.setClearListener(this::clearFights);
+
+		BufferedImage icon = ImageUtil.loadImageResource(BossFightLogPlugin.class, "icon.png");
+		navButton = NavigationButton.builder()
+			.tooltip("Boss Fight Log")
+			.icon(icon)
+			.priority(5)
+			.panel(panel)
+			.build();
+		clientToolbar.addNavigation(navButton);
+
 		log.debug("Boss Fight Log started");
 	}
 
@@ -49,7 +72,18 @@ public class BossFightLogPlugin extends Plugin
 		});
 		fightTracker.reset();
 		fights.clear();
+
+		clientToolbar.removeNavigation(navButton);
+		navButton = null;
+		panel = null;
+
 		log.debug("Boss Fight Log stopped");
+	}
+
+	private void clearFights()
+	{
+		fights.clear();
+		panel.setFights(fights);
 	}
 
 	/**
@@ -63,6 +97,7 @@ public class BossFightLogPlugin extends Plugin
 	private void onFightComplete(BossFight fight)
 	{
 		fights.add(fight);
+		panel.setFights(fights);
 		log.debug("{} killed in {}s: {} dps, {} damage taken, {}/{} accuracy",
 			fight.getBossName(),
 			String.format("%.1f", fight.getDurationSeconds()),
