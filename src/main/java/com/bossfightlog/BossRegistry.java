@@ -51,6 +51,10 @@ public class BossRegistry
 		"The Leviathan",
 		"The Whisperer",
 		"Vardorvis",
+		// Phased. Included to find out how their deaths actually behave: if the phase change
+		// despawns the NPC rather than transforming it in place, the fight is discarded and the
+		// log says so, which is the information needed to handle it properly.
+		"Araxxor",
 		// Assorted
 		"King Black Dragon",
 		"Kalphite Queen",
