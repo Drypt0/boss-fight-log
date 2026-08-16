@@ -4,45 +4,61 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridLayout;
+import java.util.Collections;
 import java.util.List;
+import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingConstants;
+import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.MatteBorder;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
 
 /**
- * Session totals across every recorded kill, shown above the individual kill cards.
+ * Session totals across every recorded kill.
+ * <p>
+ * Kills and average DPS are promoted to a hero row because they are what the panel is glanced at
+ * for; everything else is supporting detail in a quieter list below a divider. A flat list of
+ * equally weighted rows makes the reader search for the number they came for.
  */
 class SummaryPanel extends JPanel
 {
-	private final JPanel rows = new JPanel(new GridLayout(0, 2, 4, 2));
+	private final JPanel hero = new JPanel(new GridLayout(1, 2, 4, 0));
+	private final JPanel details = new JPanel();
 
 	SummaryPanel()
 	{
 		setLayout(new BorderLayout());
 		setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		setBorder(new EmptyBorder(6, 7, 6, 7));
+		setBorder(new EmptyBorder(8, 8, 8, 8));
 		setAlignmentX(Component.LEFT_ALIGNMENT);
 
-		rows.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		add(rows, BorderLayout.CENTER);
+		hero.setOpaque(false);
+		hero.setBorder(new EmptyBorder(0, 0, 8, 0));
 
-		update(java.util.Collections.emptyList());
+		details.setLayout(new BoxLayout(details, BoxLayout.Y_AXIS));
+		details.setOpaque(false);
+
+		add(hero, BorderLayout.NORTH);
+		add(details, BorderLayout.CENTER);
+
+		update(Collections.emptyList());
 	}
 
 	void update(List<BossFight> fights)
 	{
-		rows.removeAll();
+		hero.removeAll();
+		details.removeAll();
 
 		if (fights.isEmpty())
 		{
-			JLabel empty = new JLabel("No kills recorded yet");
+			JLabel empty = new JLabel("No kills recorded yet", SwingConstants.CENTER);
 			empty.setFont(FontManager.getRunescapeSmallFont());
-			empty.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-			rows.add(empty);
-			rows.revalidate();
-			rows.repaint();
+			empty.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
+			hero.add(empty);
+			revalidateAll();
 			return;
 		}
 
@@ -72,31 +88,71 @@ class SummaryPanel extends JPanel
 		double overallDps = totalSeconds > 0 ? totalDamage / totalSeconds : 0;
 		double accuracy = totalAttempts > 0 ? (double) totalHits / totalAttempts : 0;
 
-		addRow("Kills", Formats.number(kills));
-		addRow("Total time", Formats.duration(totalSeconds));
-		addRow("Avg kill", Formats.duration(totalSeconds / kills));
-		addRow("Best kill", Formats.duration(bestTime));
-		addRow("Avg DPS", Formats.dps(overallDps));
-		addRow("Best DPS", Formats.dps(bestDps));
-		addRow("Dmg taken", Formats.number(totalTaken));
-		addRow("Accuracy", Formats.percent(accuracy));
+		hero.add(heroStat(Formats.number(kills), kills == 1 ? "KILL" : "KILLS"));
+		hero.add(heroStat(Formats.dps(overallDps), "AVG DPS"));
 
-		rows.revalidate();
-		rows.repaint();
+		details.setBorder(new CompoundBorder(
+			new MatteBorder(1, 0, 0, 0, ColorScheme.BORDER_COLOR),
+			new EmptyBorder(4, 0, 0, 0)));
+		addDetail("Avg kill", Formats.duration(totalSeconds / kills));
+		addDetail("Best kill", Formats.duration(bestTime));
+		addDetail("Best DPS", Formats.dps(bestDps));
+		addDetail("Total time", Formats.duration(totalSeconds));
+		addDetail("Dmg taken", Formats.number(totalTaken));
+		addDetail("Accuracy", Formats.percent(accuracy));
+
+		revalidateAll();
 	}
 
-	private void addRow(String label, String value)
+	private static JPanel heroStat(String value, String caption)
 	{
+		JPanel block = new JPanel();
+		block.setLayout(new BoxLayout(block, BoxLayout.Y_AXIS));
+		block.setOpaque(false);
+
+		JLabel valueLabel = new JLabel(value, SwingConstants.CENTER);
+		valueLabel.setFont(FontManager.getRunescapeBoldFont());
+		valueLabel.setForeground(ColorScheme.BRAND_ORANGE);
+		valueLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+		JLabel captionLabel = new JLabel(caption, SwingConstants.CENTER);
+		captionLabel.setFont(FontManager.getRunescapeSmallFont());
+		captionLabel.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
+		captionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+		block.add(valueLabel);
+		block.add(captionLabel);
+		return block;
+	}
+
+	private void addDetail(String label, String value)
+	{
+		JPanel row = new JPanel(new BorderLayout());
+		row.setOpaque(false);
+		row.setBorder(new EmptyBorder(3, 0, 0, 0));
+
 		JLabel key = new JLabel(label);
 		key.setFont(FontManager.getRunescapeSmallFont());
-		key.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+		key.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
 
-		JLabel val = new JLabel(value);
+		// Values are right-aligned so the column reads as a column rather than a ragged edge.
+		JLabel val = new JLabel(value, SwingConstants.RIGHT);
 		val.setFont(FontManager.getRunescapeSmallFont());
-		val.setForeground(ColorScheme.BRAND_ORANGE);
+		val.setForeground(ColorScheme.TEXT_COLOR);
 
-		rows.add(key);
-		rows.add(val);
+		row.add(key, BorderLayout.WEST);
+		row.add(val, BorderLayout.EAST);
+
+		row.setMaximumSize(new Dimension(Integer.MAX_VALUE, row.getPreferredSize().height));
+		details.add(row);
+	}
+
+	private void revalidateAll()
+	{
+		hero.revalidate();
+		hero.repaint();
+		details.revalidate();
+		details.repaint();
 	}
 
 	@Override

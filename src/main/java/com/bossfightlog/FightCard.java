@@ -1,9 +1,13 @@
 package com.bossfightlog;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.GridLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
@@ -12,35 +16,45 @@ import net.runelite.client.ui.FontManager;
 
 /**
  * One completed kill, laid out like a Loot Tracker entry: identity and headline number in the
- * header, detail underneath. The headline number here is the kill time rather than a loot value,
- * since that is the figure worth comparing between kills.
+ * header, detail underneath. The headline is the kill time rather than a loot value, since that is
+ * the figure worth comparing between kills.
+ * <p>
+ * Colour carries meaning rather than decoration: orange for the kill time, plain text for DPS, red
+ * for damage taken, and muted grey for everything supporting. That gives a reading order at a
+ * glance instead of eight values competing for attention.
  */
 class FightCard extends JPanel
 {
+	private static final Color DAMAGE_TAKEN_COLOR = ColorScheme.PROGRESS_ERROR_COLOR;
+
 	FightCard(BossFight fight)
 	{
 		setLayout(new BorderLayout());
 		setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		setBorder(new EmptyBorder(5, 7, 5, 7));
+		setBorder(new EmptyBorder(6, 8, 6, 8));
 		setAlignmentX(Component.LEFT_ALIGNMENT);
 
 		add(buildHeader(fight), BorderLayout.NORTH);
-		add(buildStats(fight), BorderLayout.CENTER);
+		add(buildBody(fight), BorderLayout.CENTER);
 
 		setToolTipText(buildTooltip(fight));
+		installHover(this);
 	}
 
 	private static JPanel buildHeader(BossFight fight)
 	{
 		JPanel header = new JPanel(new BorderLayout());
-		header.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+		header.setOpaque(false);
 
-		JLabel name = new JLabel(fight.getBossName() + " (lvl-" + fight.getCombatLevel() + ")");
+		// The combat level is dimmed so the boss name reads first.
+		JLabel name = new JLabel("<html>" + fight.getBossName()
+			+ " <font color='" + Formats.hex(ColorScheme.MEDIUM_GRAY_COLOR) + "'>(lvl-"
+			+ fight.getCombatLevel() + ")</font></html>");
 		name.setFont(FontManager.getRunescapeSmallFont());
-		name.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+		name.setForeground(ColorScheme.TEXT_COLOR);
 
 		JLabel time = new JLabel(Formats.duration(fight.getDurationSeconds()));
-		time.setFont(FontManager.getRunescapeSmallFont());
+		time.setFont(FontManager.getRunescapeBoldFont());
 		time.setForeground(ColorScheme.BRAND_ORANGE);
 
 		header.add(name, BorderLayout.WEST);
@@ -48,26 +62,32 @@ class FightCard extends JPanel
 		return header;
 	}
 
-	private static JPanel buildStats(BossFight fight)
+	private static JPanel buildBody(BossFight fight)
 	{
-		JPanel stats = new JPanel(new GridLayout(2, 2, 4, 1));
-		stats.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		stats.setBorder(new EmptyBorder(4, 0, 0, 0));
+		JPanel body = new JPanel();
+		body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
+		body.setOpaque(false);
+		body.setBorder(new EmptyBorder(3, 0, 0, 0));
 
-		stats.add(stat(Formats.dps(fight.getDps()) + " dps"));
-		stats.add(stat(Formats.number(fight.getDamageDealt()) + " dealt"));
-		stats.add(stat(Formats.number(fight.getDamageTaken()) + " taken"));
-		stats.add(stat(Formats.percent(fight.getAccuracy()) + " acc"));
+		JLabel dps = new JLabel("<html>" + Formats.dps(fight.getDps())
+			+ " <font color='" + Formats.hex(ColorScheme.MEDIUM_GRAY_COLOR) + "'>dps</font></html>");
+		dps.setFont(FontManager.getRunescapeBoldFont());
+		dps.setForeground(ColorScheme.TEXT_COLOR);
+		dps.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-		return stats;
-	}
+		String muted = Formats.hex(ColorScheme.MEDIUM_GRAY_COLOR);
+		JLabel detail = new JLabel("<html>"
+			+ "<font color='" + muted + "'>" + Formats.number(fight.getDamageDealt()) + " dealt</font>"
+			+ "<font color='" + muted + "'> &middot; </font>"
+			+ "<font color='" + Formats.hex(DAMAGE_TAKEN_COLOR) + "'>" + Formats.number(fight.getDamageTaken()) + " taken</font>"
+			+ "<font color='" + muted + "'> &middot; " + Formats.percent(fight.getAccuracy()) + " acc</font>"
+			+ "</html>");
+		detail.setFont(FontManager.getRunescapeSmallFont());
+		detail.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-	private static JLabel stat(String text)
-	{
-		JLabel label = new JLabel(text);
-		label.setFont(FontManager.getRunescapeSmallFont());
-		label.setForeground(ColorScheme.GRAND_EXCHANGE_ALCH);
-		return label;
+		body.add(dps);
+		body.add(detail);
+		return body;
 	}
 
 	private static String buildTooltip(BossFight fight)
@@ -77,6 +97,46 @@ class FightCard extends JPanel
 			+ "Hits landed: " + fight.getHits() + " of " + (fight.getHits() + fight.getMisses()) + "<br>"
 			+ "Fight time: " + Formats.duration(fight.getDurationSeconds()) + " (idle time excluded)"
 			+ "</html>";
+	}
+
+	/**
+	 * Highlights the whole card on hover. The listener goes on every descendant as well, otherwise
+	 * moving the pointer onto a child label reads as leaving the card.
+	 */
+	private static void installHover(FightCard card)
+	{
+		MouseAdapter hover = new MouseAdapter()
+		{
+			@Override
+			public void mouseEntered(MouseEvent e)
+			{
+				card.setBackground(ColorScheme.DARKER_GRAY_HOVER_COLOR);
+			}
+
+			@Override
+			public void mouseExited(MouseEvent e)
+			{
+				card.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+			}
+		};
+
+		addRecursively(card, hover);
+	}
+
+	private static void addRecursively(Container container, MouseAdapter listener)
+	{
+		container.addMouseListener(listener);
+		for (Component child : container.getComponents())
+		{
+			if (child instanceof Container)
+			{
+				addRecursively((Container) child, listener);
+			}
+			else
+			{
+				child.addMouseListener(listener);
+			}
+		}
 	}
 
 	@Override

@@ -1,5 +1,7 @@
 package com.bossfightlog;
 
+import java.awt.Color;
+
 /**
  * Display formatting shared by the panel widgets.
  */
@@ -7,6 +9,14 @@ final class Formats
 {
 	private Formats()
 	{
+	}
+
+	/**
+	 * Renders a colour as a CSS hex string, for use inside HTML labels.
+	 */
+	static String hex(Color color)
+	{
+		return String.format("#%06x", color.getRGB() & 0xFFFFFF);
 	}
 
 	/**
