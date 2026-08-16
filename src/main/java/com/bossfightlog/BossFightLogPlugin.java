@@ -7,12 +7,15 @@ import java.util.Collections;
 import java.util.List;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.Client;
 import net.runelite.api.GameState;
+import net.runelite.api.Player;
 import net.runelite.api.events.ActorDeath;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.HitsplatApplied;
 import net.runelite.api.events.NpcDespawned;
+import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
@@ -30,10 +33,19 @@ import net.runelite.client.util.ImageUtil;
 public class BossFightLogPlugin extends Plugin
 {
 	@Inject
+	private Client client;
+
+	@Inject
+	private ClientThread clientThread;
+
+	@Inject
 	private BossFightLogConfig config;
 
 	@Inject
 	private FightTracker fightTracker;
+
+	@Inject
+	private FightStore fightStore;
 
 	@Inject
 	private ClientToolbar clientToolbar;
@@ -43,10 +55,17 @@ public class BossFightLogPlugin extends Plugin
 	private BossFightLogPanel panel;
 	private NavigationButton navButton;
 
+	/**
+	 * Character whose history is currently loaded, or null before the first login. History is kept
+	 * per character so accounts do not pool their kills.
+	 */
+	private String loadedCharacter;
+
 	@Override
 	protected void startUp() throws Exception
 	{
 		fights.clear();
+		loadedCharacter = null;
 		fightTracker.reset();
 		fightTracker.setFightListener(this::onFightComplete);
 
@@ -72,6 +91,7 @@ public class BossFightLogPlugin extends Plugin
 		});
 		fightTracker.reset();
 		fights.clear();
+		loadedCharacter = null;
 
 		clientToolbar.removeNavigation(navButton);
 		navButton = null;
@@ -80,24 +100,35 @@ public class BossFightLogPlugin extends Plugin
 		log.debug("Boss Fight Log stopped");
 	}
 
-	private void clearFights()
-	{
-		fights.clear();
-		panel.setFights(fights);
-	}
-
 	/**
-	 * Kills recorded this session, most recent last.
+	 * Recorded kills, oldest first.
 	 */
 	public List<BossFight> getFights()
 	{
 		return Collections.unmodifiableList(fights);
 	}
 
+	private void clearFights()
+	{
+		clientThread.invoke(() -> {
+			fights.clear();
+			persist();
+			updatePanel();
+		});
+	}
+
 	private void onFightComplete(BossFight fight)
 	{
 		fights.add(fight);
-		panel.setFights(fights);
+
+		while (fights.size() > FightStore.MAX_FIGHTS)
+		{
+			fights.remove(0);
+		}
+
+		persist();
+		updatePanel();
+
 		log.debug("{} killed in {}s: {} dps, {} damage taken, {}/{} accuracy",
 			fight.getBossName(),
 			String.format("%.1f", fight.getDurationSeconds()),
@@ -105,6 +136,59 @@ public class BossFightLogPlugin extends Plugin
 			fight.getDamageTaken(),
 			fight.getHits(),
 			fight.getHits() + fight.getMisses());
+	}
+
+	private void persist()
+	{
+		if (loadedCharacter != null)
+		{
+			fightStore.save(loadedCharacter, fights);
+		}
+	}
+
+	private void updatePanel()
+	{
+		if (panel != null)
+		{
+			panel.setFights(fights);
+		}
+	}
+
+	/**
+	 * Loads the history for whichever character is logged in, once their name is available.
+	 * <p>
+	 * The name is not readable at the moment the game state flips to logged in, so this is driven
+	 * from the tick instead of from the state change.
+	 */
+	private void loadHistoryIfNeeded()
+	{
+		Player local = client.getLocalPlayer();
+		if (local == null)
+		{
+			return;
+		}
+
+		String name = local.getName();
+		if (name == null || name.equals(loadedCharacter))
+		{
+			return;
+		}
+
+		loadedCharacter = name;
+		log.debug("Loading fight history for {}", name);
+
+		fightStore.load(name, loaded -> clientThread.invoke(() -> {
+			// Anything recorded while the file was being read is kept, and would otherwise be lost
+			// to the load overwriting it.
+			List<BossFight> merged = new ArrayList<>(FightStore.capped(loaded));
+			merged.addAll(fights);
+
+			fights.clear();
+			fights.addAll(FightStore.capped(merged));
+			updatePanel();
+
+			log.debug("Loaded {} recorded kills for {}", fights.size(), name);
+		}));
 	}
 
 	@Subscribe
@@ -129,6 +213,7 @@ public class BossFightLogPlugin extends Plugin
 	public void onGameTick(GameTick event)
 	{
 		fightTracker.onGameTick();
+		loadHistoryIfNeeded();
 	}
 
 	@Subscribe

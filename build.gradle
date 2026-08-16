@@ -42,6 +42,12 @@ tasks.register('run', JavaExec) {
 	args "--developer-mode", "--debug"
 }
 
+tasks.register('preview', JavaExec) {
+	description = 'Renders the side panel with sample kills, without launching the client.'
+	classpath = sourceSets.test.runtimeClasspath
+	mainClass = 'com.bossfightlog.PanelPreview'
+}
+
 tasks.register('shadowJar', Jar) {
 	dependsOn configurations.testRuntimeClasspath
 	manifest {
