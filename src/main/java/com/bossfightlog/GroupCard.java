@@ -61,17 +61,17 @@ class GroupCard extends JPanel
 		JPanel header = new JPanel(new BorderLayout());
 		header.setOpaque(false);
 
-		JLabel name = new JLabel("<html>" + group.getBossName()
-			+ " <font color='" + Formats.hex(ColorScheme.MEDIUM_GRAY_COLOR) + "'>(lvl-"
-			+ group.getCombatLevel() + ")</font></html>");
+		// Centre slot so a long boss name truncates rather than printing over the kill count.
+		JLabel name = new JLabel(group.getBossName() + " (lvl-" + group.getCombatLevel() + ")");
 		name.setFont(FontManager.getRunescapeSmallFont());
 		name.setForeground(ColorScheme.TEXT_COLOR);
 
 		killCount.setText(group.getKills() + (group.getKills() == 1 ? " kill" : " kills"));
 		killCount.setFont(FontManager.getRunescapeBoldFont());
 		killCount.setForeground(ColorScheme.BRAND_ORANGE);
+		killCount.setBorder(new EmptyBorder(0, 6, 0, 0));
 
-		header.add(name, BorderLayout.WEST);
+		header.add(name, BorderLayout.CENTER);
 		header.add(killCount, BorderLayout.EAST);
 
 		JPanel body = new JPanel();

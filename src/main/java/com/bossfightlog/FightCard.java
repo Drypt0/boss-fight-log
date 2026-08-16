@@ -50,18 +50,20 @@ class FightCard extends JPanel
 		JPanel header = new JPanel(new BorderLayout());
 		header.setOpaque(false);
 
-		// The combat level is dimmed so the boss name reads first.
-		JLabel name = new JLabel("<html>" + fight.getBossName()
-			+ " <font color='" + Formats.hex(ColorScheme.MEDIUM_GRAY_COLOR) + "'>(lvl-"
-			+ fight.getCombatLevel() + ")</font></html>");
+		// Plain text in the centre slot rather than HTML in the west slot: west takes its full
+		// preferred width and prints straight over the time on a long boss name, whereas centre
+		// gets whatever is left over and a plain label truncates itself with an ellipsis. HTML
+		// labels wrap instead of truncating, which costs the dimmed combat level.
+		JLabel name = new JLabel(fight.getBossName() + " (lvl-" + fight.getCombatLevel() + ")");
 		name.setFont(FontManager.getRunescapeSmallFont());
 		name.setForeground(ColorScheme.TEXT_COLOR);
 
 		JLabel time = new JLabel(Formats.duration(fight.getDurationSeconds()));
 		time.setFont(FontManager.getRunescapeBoldFont());
 		time.setForeground(ColorScheme.BRAND_ORANGE);
+		time.setBorder(new EmptyBorder(0, 6, 0, 0));
 
-		header.add(name, BorderLayout.WEST);
+		header.add(name, BorderLayout.CENTER);
 		header.add(time, BorderLayout.EAST);
 		return header;
 	}
