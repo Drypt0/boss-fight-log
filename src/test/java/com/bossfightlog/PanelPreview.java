@@ -22,8 +22,13 @@ import net.runelite.client.ui.PluginPanel;
 public class PanelPreview
 {
 	private static final List<BossFight> SAMPLE = Arrays.asList(
-		// Ordinary kill, the shape most cards will take.
+		// Repeated kills of one boss, so grouping has something to collapse and the trend figures
+		// have a baseline. DPS is varied deliberately: 561/120 ticks is the middle of the spread,
+		// with a clearly better and a clearly worse kill either side of it.
 		new BossFight("Scurrius", 200, 561, 22, 27, 3, 45, 120, Instant.now()),
+		new BossFight("Scurrius", 200, 548, 41, 26, 6, 42, 148, Instant.now()),
+		new BossFight("Scurrius", 200, 570, 8, 28, 1, 45, 96, Instant.now()),
+		new BossFight("Scurrius", 200, 559, 30, 27, 4, 39, 133, Instant.now()),
 		// Longest name in the registry against the widest kill time.
 		new BossFight("Thermonuclear smoke devil", 301, 12450, 187, 214, 46, 62, 640, Instant.now()),
 		// Flawless: no damage taken, perfect accuracy.
@@ -32,6 +37,7 @@ public class PanelPreview
 		new BossFight("Bryophyta", 128, 180, 14, 9, 1, 38, 18, Instant.now()),
 		// Rough kill: heavy damage taken, poor accuracy.
 		new BossFight("Corporeal Beast", 785, 2640, 891, 88, 61, 51, 1180, Instant.now()),
+		new BossFight("Corporeal Beast", 785, 2710, 640, 91, 48, 57, 1020, Instant.now()),
 		// Runs past an hour, tests the h:mm:ss branch.
 		new BossFight("Vet'ion", 454, 31200, 2450, 640, 190, 74, 6400, Instant.now())
 	);

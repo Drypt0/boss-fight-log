@@ -27,7 +27,11 @@ class FightCard extends JPanel
 {
 	private static final Color DAMAGE_TAKEN_COLOR = ColorScheme.PROGRESS_ERROR_COLOR;
 
-	FightCard(BossFight fight)
+	/**
+	 * @param dpsTrend signed fraction against this boss's other kills, or null when there is
+	 *                 nothing to compare against
+	 */
+	FightCard(BossFight fight, Double dpsTrend)
 	{
 		setLayout(new BorderLayout());
 		setBackground(ColorScheme.DARKER_GRAY_COLOR);
@@ -35,9 +39,9 @@ class FightCard extends JPanel
 		setAlignmentX(Component.LEFT_ALIGNMENT);
 
 		add(buildHeader(fight), BorderLayout.NORTH);
-		add(buildBody(fight), BorderLayout.CENTER);
+		add(buildBody(fight, dpsTrend), BorderLayout.CENTER);
 
-		setToolTipText(buildTooltip(fight));
+		setToolTipText(buildTooltip(fight, dpsTrend));
 		installHover(this);
 	}
 
@@ -62,7 +66,7 @@ class FightCard extends JPanel
 		return header;
 	}
 
-	private static JPanel buildBody(BossFight fight)
+	private static JPanel buildBody(BossFight fight, Double dpsTrend)
 	{
 		JPanel body = new JPanel();
 		body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
@@ -70,7 +74,8 @@ class FightCard extends JPanel
 		body.setBorder(new EmptyBorder(3, 0, 0, 0));
 
 		JLabel dps = new JLabel("<html>" + Formats.dps(fight.getDps())
-			+ " <font color='" + Formats.hex(ColorScheme.MEDIUM_GRAY_COLOR) + "'>dps</font></html>");
+			+ " <font color='" + Formats.hex(ColorScheme.MEDIUM_GRAY_COLOR) + "'>dps</font>"
+			+ Formats.trendHtml(dpsTrend) + "</html>");
 		dps.setFont(FontManager.getRunescapeBoldFont());
 		dps.setForeground(ColorScheme.TEXT_COLOR);
 		dps.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -90,12 +95,17 @@ class FightCard extends JPanel
 		return body;
 	}
 
-	private static String buildTooltip(BossFight fight)
+	private static String buildTooltip(BossFight fight, Double dpsTrend)
 	{
+		String trend = dpsTrend == null
+			? "First recorded kill of this boss"
+			: Formats.percentSigned(dpsTrend) + " DPS against your other kills of this boss";
+
 		return "<html>"
 			+ "Max hit: " + fight.getMaxHit() + "<br>"
 			+ "Hits landed: " + fight.getHits() + " of " + (fight.getHits() + fight.getMisses()) + "<br>"
-			+ "Fight time: " + Formats.duration(fight.getDurationSeconds()) + " (idle time excluded)"
+			+ "Fight time: " + Formats.duration(fight.getDurationSeconds()) + " (idle time excluded)<br>"
+			+ trend
 			+ "</html>";
 	}
 

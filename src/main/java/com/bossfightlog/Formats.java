@@ -51,4 +51,36 @@ final class Formats
 	{
 		return String.format("%,d", value);
 	}
+
+	/**
+	 * @param fraction a signed value, where 0.12 reads as +12%
+	 */
+	static String percentSigned(double fraction)
+	{
+		return String.format("%+.0f%%", fraction * 100);
+	}
+
+	/**
+	 * Renders a trend as coloured HTML, or nothing at all when there is no baseline to compare
+	 * against. Arrow glyphs are avoided because the RuneScape font does not carry them.
+	 */
+	static String trendHtml(Double fraction)
+	{
+		if (fraction == null)
+		{
+			return "";
+		}
+
+		// Below a percent the difference is noise, and a flickering +0%/-0% reads as meaningful.
+		if (Math.abs(fraction) < 0.01)
+		{
+			return "";
+		}
+
+		Color color = fraction > 0
+			? net.runelite.client.ui.ColorScheme.PROGRESS_COMPLETE_COLOR
+			: net.runelite.client.ui.ColorScheme.PROGRESS_ERROR_COLOR;
+
+		return "  <font color='" + hex(color) + "'>" + percentSigned(fraction) + "</font>";
+	}
 }

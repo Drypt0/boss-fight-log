@@ -6,6 +6,7 @@ import java.awt.Cursor;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
@@ -17,17 +18,21 @@ import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.PluginPanel;
 
 /**
- * The side panel: session totals on top, then one card per kill with the most recent first.
+ * The side panel: session totals on top, then either one card per kill or one row per boss.
  * <p>
- * Rebuilt wholesale whenever the fight list changes. A session holds tens of kills rather than
- * thousands, so the simplicity is worth more than incremental updates would be.
+ * Rebuilt wholesale whenever the fight list changes. A history holds hundreds of kills rather than
+ * millions, so the simplicity is worth more than incremental updates would be.
  */
 class BossFightLogPanel extends PluginPanel
 {
 	private final SummaryPanel summary = new SummaryPanel();
-	private final JPanel fightList = new JPanel();
+	private final JPanel content = new JPanel();
 	private final JLabel clearButton = new JLabel("Clear");
+	private final JLabel allKillsTab = new JLabel("All kills");
+	private final JLabel byBossTab = new JLabel("By boss");
 
+	private List<BossFight> fights = new ArrayList<>();
+	private boolean groupByBoss;
 	private Runnable onClear = () -> {
 	};
 
@@ -37,13 +42,13 @@ class BossFightLogPanel extends PluginPanel
 		setBorder(new EmptyBorder(8, 8, 8, 8));
 		setBackground(ColorScheme.DARK_GRAY_COLOR);
 
-		fightList.setLayout(new BoxLayout(fightList, BoxLayout.Y_AXIS));
-		fightList.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+		content.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
 		add(buildHeader(), BorderLayout.NORTH);
-		add(fightList, BorderLayout.CENTER);
+		add(content, BorderLayout.CENTER);
 
-		setFights(new ArrayList<>());
+		setFights(Collections.emptyList());
 	}
 
 	void setClearListener(Runnable onClear)
@@ -57,25 +62,49 @@ class BossFightLogPanel extends PluginPanel
 	void setFights(List<BossFight> fights)
 	{
 		List<BossFight> snapshot = new ArrayList<>(fights);
-		SwingUtilities.invokeLater(() -> rebuild(snapshot));
+		SwingUtilities.invokeLater(() -> {
+			this.fights = snapshot;
+			rebuild();
+		});
 	}
 
-	private void rebuild(List<BossFight> fights)
+	private void rebuild()
 	{
 		summary.update(fights);
+		updateTabStyles();
 
-		fightList.removeAll();
-		for (int i = fights.size() - 1; i >= 0; i--)
+		content.removeAll();
+
+		if (groupByBoss)
 		{
-			FightCard card = new FightCard(fights.get(i));
-			card.setBorder(new EmptyBorder(0, 0, 4, 0));
-			fightList.add(card);
+			for (BossGroup group : BossGroup.group(fights))
+			{
+				content.add(wrap(new GroupCard(group, fights)));
+			}
+		}
+		else
+		{
+			for (int i = fights.size() - 1; i >= 0; i--)
+			{
+				BossFight fight = fights.get(i);
+				content.add(wrap(new FightCard(fight, BossGroup.dpsTrend(fight, fights))));
+			}
 		}
 
 		clearButton.setVisible(!fights.isEmpty());
 
-		fightList.revalidate();
-		fightList.repaint();
+		content.revalidate();
+		content.repaint();
+	}
+
+	private static JPanel wrap(JPanel card)
+	{
+		JPanel spacer = new JPanel(new BorderLayout());
+		spacer.setOpaque(false);
+		spacer.setBorder(new EmptyBorder(0, 0, 4, 0));
+		spacer.setAlignmentX(Component.LEFT_ALIGNMENT);
+		spacer.add(card, BorderLayout.CENTER);
+		return spacer;
 	}
 
 	private JPanel buildHeader()
@@ -121,6 +150,45 @@ class BossFightLogPanel extends PluginPanel
 
 		header.add(titleRow, BorderLayout.NORTH);
 		header.add(summary, BorderLayout.CENTER);
+		header.add(buildTabs(), BorderLayout.SOUTH);
 		return header;
+	}
+
+	private JPanel buildTabs()
+	{
+		JPanel tabs = new JPanel(new BorderLayout());
+		tabs.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		tabs.setBorder(new EmptyBorder(2, 0, 0, 0));
+
+		configureTab(allKillsTab, false);
+		configureTab(byBossTab, true);
+
+		tabs.add(allKillsTab, BorderLayout.WEST);
+		tabs.add(byBossTab, BorderLayout.EAST);
+		return tabs;
+	}
+
+	private void configureTab(JLabel tab, boolean grouped)
+	{
+		tab.setFont(FontManager.getRunescapeSmallFont());
+		tab.setCursor(new Cursor(Cursor.HAND_CURSOR));
+		tab.addMouseListener(new MouseAdapter()
+		{
+			@Override
+			public void mouseClicked(MouseEvent e)
+			{
+				if (groupByBoss != grouped)
+				{
+					groupByBoss = grouped;
+					rebuild();
+				}
+			}
+		});
+	}
+
+	private void updateTabStyles()
+	{
+		allKillsTab.setForeground(groupByBoss ? ColorScheme.MEDIUM_GRAY_COLOR : ColorScheme.BRAND_ORANGE);
+		byBossTab.setForeground(groupByBoss ? ColorScheme.BRAND_ORANGE : ColorScheme.MEDIUM_GRAY_COLOR);
 	}
 }
