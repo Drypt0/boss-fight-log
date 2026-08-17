@@ -1,6 +1,8 @@
 package com.bossfightlog;
 
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Consumer;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -122,15 +124,26 @@ public class FightTracker
 
 	public void onActorDeath(ActorDeath event)
 	{
-		if (active != null && event.getActor() == active.npc)
+		if (!(event.getActor() instanceof NPC))
 		{
-			complete(client.getTickCount());
+			return;
+		}
+
+		NPC npc = (NPC) event.getActor();
+
+		if (active != null && active.liveMembers.remove(npc))
+		{
+			// A paired encounter is only over once both halves are down.
+			if (active.liveMembers.isEmpty())
+			{
+				complete(client.getTickCount());
+			}
 			return;
 		}
 
 		// Death normally arrives before the despawn, but if the order is ever reversed the fight
 		// would already be parked and the kill would be thrown away when the grace period expired.
-		if (parked != null && event.getActor() == parked.npc)
+		if (parked != null && parked.encounter == bossRegistry.encounterFor(npc))
 		{
 			active = parked;
 			parked = null;
@@ -145,7 +158,7 @@ public class FightTracker
 	 */
 	public void onNpcChanged(NpcChanged event)
 	{
-		if (active != null && event.getNpc() == active.npc)
+		if (active != null && active.liveMembers.contains(event.getNpc()))
 		{
 			log.debug("{} transformed in place, fight continues", active.name);
 		}
@@ -153,16 +166,24 @@ public class FightTracker
 
 	public void onNpcDespawned(NpcDespawned event)
 	{
-		if (active != null && event.getNpc() == active.npc)
+		if (active == null || !active.liveMembers.remove(event.getNpc()))
 		{
-			// A despawn is not necessarily the end: a phased boss may vanish and return as a fresh
-			// NPC. The fight is parked rather than discarded, and resumes if the same boss is
-			// engaged again shortly afterwards.
-			parked = active;
-			parkedAtTick = client.getTickCount();
-			active = null;
-			log.debug("Parked fight against {} after despawn", parked.name);
+			return;
 		}
+
+		if (!active.liveMembers.isEmpty())
+		{
+			// The other half of a pair is still up, so the fight carries on.
+			return;
+		}
+
+		// A despawn is not necessarily the end: a phased boss may vanish and return as a fresh
+		// NPC. The fight is parked rather than discarded, and resumes if the same encounter is
+		// engaged again shortly afterwards.
+		parked = active;
+		parkedAtTick = client.getTickCount();
+		active = null;
+		log.debug("Parked fight against {} after despawn", parked.name);
 	}
 
 	public void onGameTick()
@@ -184,31 +205,55 @@ public class FightTracker
 
 	private FightState fightFor(NPC npc, int tick)
 	{
-		if (active != null)
-		{
-			return active.npc == npc ? active : null;
-		}
-
-		if (parked != null && parked.name.equals(npc.getName()))
-		{
-			// Same boss back again within the grace period: carry on the fight it was already in
-			// rather than starting a second one. The time it was away is deducted as idle by the
-			// activity bookkeeping, so vanishing does not flatter the DPS.
-			active = parked;
-			active.npc = npc;
-			parked = null;
-			log.debug("Resumed fight against {}", active.name);
-			return active;
-		}
-
-		if (!bossRegistry.isBoss(npc))
+		BossRegistry.Encounter encounter = bossRegistry.encounterFor(npc);
+		if (encounter == null)
 		{
 			return null;
 		}
 
-		active = new FightState(npc, tick);
+		if (active != null)
+		{
+			if (active.encounter != encounter)
+			{
+				return null;
+			}
+			track(active, npc, encounter);
+			return active;
+		}
+
+		if (parked != null && parked.encounter == encounter)
+		{
+			// Same encounter back again within the grace period: carry on the fight it was already
+			// in rather than starting a second one. The time it was away is deducted as idle by the
+			// activity bookkeeping, so vanishing does not flatter the DPS.
+			active = parked;
+			parked = null;
+			track(active, npc, encounter);
+			log.debug("Resumed fight against {}", active.name);
+			return active;
+		}
+
+		// Hitting an add first does not open a fight; the boss itself has to be engaged.
+		if (!encounter.isMember(npc.getName()))
+		{
+			return null;
+		}
+
+		active = new FightState(encounter, npc, tick);
 		log.debug("Started fight against {}", active.name);
 		return active;
+	}
+
+	/**
+	 * Records a member as part of the fight so its death is what ends the encounter. Adds are
+	 * deliberately not tracked here: their damage counts, but killing one proves nothing.
+	 */
+	private static void track(FightState fight, NPC npc, BossRegistry.Encounter encounter)
+	{
+		if (encounter.isMember(npc.getName()))
+		{
+			fight.liveMembers.add(npc);
+		}
 	}
 
 	private void registerActivity(FightState fight, int tick)
@@ -250,13 +295,16 @@ public class FightTracker
 
 	private static final class FightState
 	{
-		/**
-		 * Reassigned when a fight resumes against a boss that despawned and came back.
-		 */
-		private NPC npc;
+		private final BossRegistry.Encounter encounter;
 		private final String name;
 		private final int combatLevel;
 		private final int startTick;
+
+		/**
+		 * Members engaged and not yet dead. The encounter ends when this empties, which is what
+		 * makes a paired boss one kill rather than two half fights.
+		 */
+		private final Set<NPC> liveMembers = new HashSet<>();
 
 		private int lastActivityTick;
 		private int idleTicks;
@@ -266,13 +314,14 @@ public class FightTracker
 		private int misses;
 		private int maxHit;
 
-		private FightState(NPC npc, int startTick)
+		private FightState(BossRegistry.Encounter encounter, NPC first, int startTick)
 		{
-			this.npc = npc;
-			this.name = npc.getName();
-			this.combatLevel = npc.getCombatLevel();
+			this.encounter = encounter;
+			this.name = encounter.getName();
+			this.combatLevel = first.getCombatLevel();
 			this.startTick = startTick;
 			this.lastActivityTick = startTick;
+			this.liveMembers.add(first);
 		}
 	}
 }
