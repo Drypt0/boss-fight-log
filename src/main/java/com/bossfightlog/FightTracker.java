@@ -11,6 +11,7 @@ import net.runelite.api.Hitsplat;
 import net.runelite.api.NPC;
 import net.runelite.api.events.ActorDeath;
 import net.runelite.api.events.HitsplatApplied;
+import net.runelite.api.events.NpcChanged;
 import net.runelite.api.events.NpcDespawned;
 
 /**
@@ -36,11 +37,24 @@ public class FightTracker
 	 */
 	private static final int ABANDON_AFTER_TICKS = 200;
 
+	/**
+	 * How long a despawned boss has to reappear before its fight is written off. Long enough to
+	 * cover a phase transition, short enough that a boss which genuinely reset is not credited to
+	 * the next kill.
+	 */
+	private static final int RESUME_GRACE_TICKS = 20;
+
 	private final Client client;
 	private final BossFightLogConfig config;
 	private final BossRegistry bossRegistry;
 
 	private FightState active;
+
+	/**
+	 * A fight whose boss has despawned, held in case the same boss returns.
+	 */
+	private FightState parked;
+	private int parkedAtTick;
 	private Consumer<BossFight> fightListener = fight -> {
 	};
 
@@ -60,6 +74,7 @@ public class FightTracker
 	public void reset()
 	{
 		active = null;
+		parked = null;
 	}
 
 	public void onHitsplatApplied(HitsplatApplied event)
@@ -110,6 +125,29 @@ public class FightTracker
 		if (active != null && event.getActor() == active.npc)
 		{
 			complete(client.getTickCount());
+			return;
+		}
+
+		// Death normally arrives before the despawn, but if the order is ever reversed the fight
+		// would already be parked and the kill would be thrown away when the grace period expired.
+		if (parked != null && event.getActor() == parked.npc)
+		{
+			active = parked;
+			parked = null;
+			complete(client.getTickCount());
+		}
+	}
+
+	/**
+	 * A boss that changes form is reported as the same {@link NPC} object with a new id, so the
+	 * fight carries on untouched. Logged only to establish which bosses behave this way and which
+	 * despawn instead.
+	 */
+	public void onNpcChanged(NpcChanged event)
+	{
+		if (active != null && event.getNpc() == active.npc)
+		{
+			log.debug("{} transformed in place, fight continues", active.name);
 		}
 	}
 
@@ -117,19 +155,30 @@ public class FightTracker
 	{
 		if (active != null && event.getNpc() == active.npc)
 		{
-			// A despawn without a death means the boss was lost rather than killed. Transforming
-			// bosses also land here, which is why they are not in the registry yet.
-			log.debug("Discarding fight against {}: despawned without dying", active.name);
+			// A despawn is not necessarily the end: a phased boss may vanish and return as a fresh
+			// NPC. The fight is parked rather than discarded, and resumes if the same boss is
+			// engaged again shortly afterwards.
+			parked = active;
+			parkedAtTick = client.getTickCount();
 			active = null;
+			log.debug("Parked fight against {} after despawn", parked.name);
 		}
 	}
 
 	public void onGameTick()
 	{
-		if (active != null && client.getTickCount() - active.lastActivityTick > ABANDON_AFTER_TICKS)
+		int tick = client.getTickCount();
+
+		if (active != null && tick - active.lastActivityTick > ABANDON_AFTER_TICKS)
 		{
 			log.debug("Abandoning stale fight against {}", active.name);
 			active = null;
+		}
+
+		if (parked != null && tick - parkedAtTick > RESUME_GRACE_TICKS)
+		{
+			log.debug("Discarding parked fight against {}: did not return", parked.name);
+			parked = null;
 		}
 	}
 
@@ -138,6 +187,18 @@ public class FightTracker
 		if (active != null)
 		{
 			return active.npc == npc ? active : null;
+		}
+
+		if (parked != null && parked.name.equals(npc.getName()))
+		{
+			// Same boss back again within the grace period: carry on the fight it was already in
+			// rather than starting a second one. The time it was away is deducted as idle by the
+			// activity bookkeeping, so vanishing does not flatter the DPS.
+			active = parked;
+			active.npc = npc;
+			parked = null;
+			log.debug("Resumed fight against {}", active.name);
+			return active;
 		}
 
 		if (!bossRegistry.isBoss(npc))
@@ -189,7 +250,10 @@ public class FightTracker
 
 	private static final class FightState
 	{
-		private final NPC npc;
+		/**
+		 * Reassigned when a fight resumes against a boss that despawned and came back.
+		 */
+		private NPC npc;
 		private final String name;
 		private final int combatLevel;
 		private final int startTick;

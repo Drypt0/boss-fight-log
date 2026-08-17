@@ -14,6 +14,7 @@ import net.runelite.api.events.ActorDeath;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.HitsplatApplied;
+import net.runelite.api.events.NpcChanged;
 import net.runelite.api.events.NpcDespawned;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
@@ -207,6 +208,12 @@ public class BossFightLogPlugin extends Plugin
 	public void onNpcDespawned(NpcDespawned event)
 	{
 		fightTracker.onNpcDespawned(event);
+	}
+
+	@Subscribe
+	public void onNpcChanged(NpcChanged event)
+	{
+		fightTracker.onNpcChanged(event);
 	}
 
 	@Subscribe

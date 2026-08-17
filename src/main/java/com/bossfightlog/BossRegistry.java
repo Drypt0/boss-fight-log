@@ -51,10 +51,14 @@ public class BossRegistry
 		"The Leviathan",
 		"The Whisperer",
 		"Vardorvis",
-		// Phased. Included to find out how their deaths actually behave: if the phase change
-		// despawns the NPC rather than transforming it in place, the fight is discarded and the
-		// log says so, which is the information needed to handle it properly.
+		// Phased bosses. A despawn mid fight is now parked rather than discarded, so a boss that
+		// vanishes for a phase change and returns keeps the same fight.
 		"Araxxor",
+		// Wave minigames are tracked as the final boss alone: the fight starts on the first hit
+		// against it, and the waves before it are not part of the record.
+		"TzTok-Jad",
+		"TzKal-Zuk",
+		"Sol Heredit",
 		// Assorted
 		"King Black Dragon",
 		"Kalphite Queen",
