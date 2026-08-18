@@ -29,6 +29,15 @@ public class BossFight
 		return durationTicks * SECONDS_PER_TICK;
 	}
 
+	/**
+	 * Whether this fight lasted long enough for a rate to mean anything. A kill landed inside one
+	 * tick has no duration to divide by, so it has damage but no DPS.
+	 */
+	public boolean isDpsMeasurable()
+	{
+		return durationTicks > 0;
+	}
+
 	public double getDps()
 	{
 		double seconds = getDurationSeconds();

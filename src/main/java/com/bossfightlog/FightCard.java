@@ -75,14 +75,18 @@ class FightCard extends JPanel
 		body.setOpaque(false);
 		body.setBorder(new EmptyBorder(3, 0, 0, 0));
 
-		JLabel dps = new JLabel("<html>" + Formats.dps(fight.getDps())
-			+ " <font color='" + Formats.hex(ColorScheme.MEDIUM_GRAY_COLOR) + "'>dps</font>"
-			+ Formats.trendHtml(dpsTrend) + "</html>");
+		// A kill landed inside a single tick has no duration to divide by, so there is no rate
+		// to show. Printing one would be inventing it.
+		String muted = Formats.hex(ColorScheme.MEDIUM_GRAY_COLOR);
+		String rate = fight.isDpsMeasurable()
+			? Formats.dps(fight.getDps()) + " <font color='" + muted + "'>dps</font>"
+			: "<font color='" + muted + "'>instant kill</font>";
+
+		JLabel dps = new JLabel("<html>" + rate + Formats.trendHtml(dpsTrend) + "</html>");
 		dps.setFont(FontManager.getRunescapeBoldFont());
 		dps.setForeground(ColorScheme.TEXT_COLOR);
 		dps.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-		String muted = Formats.hex(ColorScheme.MEDIUM_GRAY_COLOR);
 		JLabel detail = new JLabel("<html>"
 			+ "<font color='" + muted + "'>" + Formats.number(fight.getDamageDealt()) + " dealt</font>"
 			+ "<font color='" + muted + "'> &middot; </font>"

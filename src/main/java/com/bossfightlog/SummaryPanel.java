@@ -63,6 +63,7 @@ class SummaryPanel extends JPanel
 		}
 
 		int kills = fights.size();
+		int timedKills = 0;
 		int totalDamage = 0;
 		int totalTaken = 0;
 		int totalHits = 0;
@@ -73,10 +74,19 @@ class SummaryPanel extends JPanel
 
 		for (BossFight fight : fights)
 		{
-			totalDamage += fight.getDamageDealt();
 			totalTaken += fight.getDamageTaken();
 			totalHits += fight.getHits();
 			totalAttempts += fight.getHits() + fight.getMisses();
+
+			// Kills landed inside a single tick have damage but no duration. They are counted
+			// as kills, but contribute to no figure that divides one by the other.
+			if (!fight.isDpsMeasurable())
+			{
+				continue;
+			}
+
+			timedKills++;
+			totalDamage += fight.getDamageDealt();
 			totalTicks += fight.getDurationTicks();
 			bestDps = Math.max(bestDps, fight.getDps());
 			bestTime = Math.min(bestTime, fight.getDurationSeconds());
@@ -94,9 +104,9 @@ class SummaryPanel extends JPanel
 		details.setBorder(new CompoundBorder(
 			new MatteBorder(1, 0, 0, 0, ColorScheme.BORDER_COLOR),
 			new EmptyBorder(4, 0, 0, 0)));
-		addDetail("Avg kill", Formats.duration(totalSeconds / kills));
-		addDetail("Best kill", Formats.duration(bestTime));
-		addDetail("Best DPS", Formats.dps(bestDps));
+		addDetail("Avg kill", timedKills > 0 ? Formats.duration(totalSeconds / timedKills) : "—");
+		addDetail("Best kill", bestTime == Double.MAX_VALUE ? "—" : Formats.duration(bestTime));
+		addDetail("Best DPS", timedKills > 0 ? Formats.dps(bestDps) : "—");
 		addDetail("Total time", Formats.duration(totalSeconds));
 		addDetail("Dmg taken", Formats.number(totalTaken));
 		addDetail("Accuracy", Formats.percent(accuracy));

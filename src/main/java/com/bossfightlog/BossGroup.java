@@ -31,12 +31,20 @@ class BossGroup
 	private void add(BossFight fight)
 	{
 		fights.add(fight);
-		totalTicks += fight.getDurationTicks();
-		totalDamage += fight.getDamageDealt();
 		totalTaken += fight.getDamageTaken();
 		totalHits += fight.getHits();
 		totalAttempts += fight.getHits() + fight.getMisses();
 		bestTicks = Math.min(bestTicks, fight.getDurationTicks());
+
+		// A same tick kill has damage but no duration to divide it by. Counting its damage
+		// without its time would inflate every rate derived from the pair.
+		if (!fight.isDpsMeasurable())
+		{
+			return;
+		}
+
+		totalTicks += fight.getDurationTicks();
+		totalDamage += fight.getDamageDealt();
 		bestDps = Math.max(bestDps, fight.getDps());
 	}
 
@@ -77,7 +85,15 @@ class BossGroup
 
 	double getAverageSeconds()
 	{
-		return fights.isEmpty() ? 0 : totalTicks * BossFight.SECONDS_PER_TICK / fights.size();
+		int measured = 0;
+		for (BossFight fight : fights)
+		{
+			if (fight.isDpsMeasurable())
+			{
+				measured++;
+			}
+		}
+		return measured == 0 ? 0 : totalTicks * BossFight.SECONDS_PER_TICK / measured;
 	}
 
 	double getBestSeconds()
@@ -138,9 +154,14 @@ class BossGroup
 		double otherDamage = 0;
 		int others = 0;
 
+		if (!fight.isDpsMeasurable())
+		{
+			return null;
+		}
+
 		for (BossFight other : all)
 		{
-			if (other == fight || !other.getBossName().equals(fight.getBossName()))
+			if (other == fight || !other.getBossName().equals(fight.getBossName()) || !other.isDpsMeasurable())
 			{
 				continue;
 			}

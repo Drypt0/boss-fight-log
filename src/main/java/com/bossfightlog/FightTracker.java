@@ -271,7 +271,9 @@ public class FightTracker
 		FightState fight = active;
 		active = null;
 
-		int duration = Math.max(1, tick - fight.startTick - fight.idleTicks);
+		// A boss killed within a single tick took no measurable time. Clamping that to one tick
+		// would invent 0.6 seconds to divide by and report a DPS that was never measured.
+		int duration = Math.max(0, tick - fight.startTick - fight.idleTicks);
 
 		BossFight result = new BossFight(
 			fight.name,
