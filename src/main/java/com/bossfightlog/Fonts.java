@@ -64,6 +64,17 @@ final class Fonts
 	{
 	}
 
+	/**
+	 * Small capitals used as captions need a little tracking, or the letters crowd and read as
+	 * shrunken body text rather than a label.
+	 */
+	static Font caption(float size)
+	{
+		java.util.Map<java.awt.font.TextAttribute, Object> attributes = new java.util.HashMap<>();
+		attributes.put(java.awt.font.TextAttribute.TRACKING, 0.08f);
+		return regular(size).deriveFont(attributes);
+	}
+
 	static Font regular(float size)
 	{
 		return FAMILY == null

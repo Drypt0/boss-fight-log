@@ -23,8 +23,8 @@ import net.runelite.client.ui.PluginPanel;
  * <p>
  * A stripe down the left edge carries how the kill compared with the others, so a long list can be
  * skimmed for the good and bad ones without reading a single number. Colour is used for meaning
- * only: orange for the kill time, green or red for the comparison, a tint for damage taken, and
- * muted grey for everything supporting.
+ * only: orange for the kill time and green or red for the comparison. The supporting figures
+ * stay uniformly grey, so nothing competes with the two that carry the result.
  */
 class FightCard extends JPanel
 {
@@ -33,12 +33,6 @@ class FightCard extends JPanel
 	private static final Font TIME_FONT = Fonts.bold(13f);
 	private static final Font CAPTION_FONT = Fonts.regular(10f);
 	private static final int STRIPE_WIDTH = 3;
-
-	/**
-	 * Damage taken is context, not a warning. A tint is enough to pick it out, where full alarm
-	 * red outshouts the DPS figure the card is actually about.
-	 */
-	private static final Color DAMAGE_TAKEN_COLOR = new Color(0xC08A82);
 
 	/**
 	 * Usable width inside the panel once its scrollbar has taken its share.
@@ -134,7 +128,7 @@ class FightCard extends JPanel
 
 		JLabel detail = new JLabel("<html>"
 			+ "<font color='" + muted + "'>" + Formats.number(fight.getDamageDealt()) + " dealt &middot; </font>"
-			+ "<font color='" + Formats.hex(DAMAGE_TAKEN_COLOR) + "'>" + Formats.number(fight.getDamageTaken()) + " taken</font>"
+			+ "<font color='" + muted + "'>" + Formats.number(fight.getDamageTaken()) + " taken</font>"
 			+ "<font color='" + muted + "'> &middot; " + Formats.percent(fight.getAccuracy()) + " acc</font>"
 			+ "</html>");
 		detail.setFont(CAPTION_FONT);

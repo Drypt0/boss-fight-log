@@ -179,6 +179,6 @@ class BossFightLogPanel extends PluginPanel
 	private static void styleTab(JLabel tab, boolean selected)
 	{
 		tab.setBackground(selected ? ColorScheme.DARKER_GRAY_HOVER_COLOR : ColorScheme.DARKER_GRAY_COLOR);
-		tab.setForeground(selected ? ColorScheme.BRAND_ORANGE : ColorScheme.MEDIUM_GRAY_COLOR);
+		tab.setForeground(selected ? ColorScheme.TEXT_COLOR : ColorScheme.MEDIUM_GRAY_COLOR);
 	}
 }

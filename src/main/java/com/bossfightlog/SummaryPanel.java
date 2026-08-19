@@ -26,9 +26,11 @@ import net.runelite.client.ui.FontManager;
  */
 class SummaryPanel extends JPanel
 {
-	private static final Font VALUE_FONT = Fonts.bold(15f);
-	private static final Font CAPTION_FONT = Fonts.regular(9f);
+	private static final Font VALUE_FONT = Fonts.bold(17f);
+	private static final Font CAPTION_FONT = Fonts.caption(9f);
 
+	private final JLabel heading = new JLabel("SESSION");
+	private final JLabel headingValue = new JLabel();
 	private final JPanel grid = new JPanel(new GridLayout(0, 2, 1, 1));
 
 	SummaryPanel()
@@ -43,7 +45,21 @@ class SummaryPanel extends JPanel
 		// The gap colour shows through as hairline rules between tiles.
 		grid.setBackground(ColorScheme.MEDIUM_GRAY_COLOR.darker());
 
+		heading.setFont(CAPTION_FONT);
+		heading.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
+		headingValue.setFont(CAPTION_FONT);
+		headingValue.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
+		headingValue.setHorizontalAlignment(SwingConstants.RIGHT);
+
+		JPanel headingRow = new JPanel(new BorderLayout());
+		headingRow.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+		headingRow.setBorder(new EmptyBorder(6, 9, 6, 8));
+		headingRow.add(heading, BorderLayout.WEST);
+		headingRow.add(headingValue, BorderLayout.EAST);
+
+		add(headingRow, BorderLayout.NORTH);
 		add(grid, BorderLayout.CENTER);
+
 
 		update(Collections.emptyList());
 	}
@@ -58,6 +74,7 @@ class SummaryPanel extends JPanel
 			JLabel empty = new JLabel("No kills recorded yet", SwingConstants.CENTER);
 			empty.setFont(CAPTION_FONT);
 			empty.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
+			headingValue.setText("");
 			grid.add(empty);
 			revalidateAll();
 			return;
@@ -110,6 +127,8 @@ class SummaryPanel extends JPanel
 		double overallDps = timedSeconds > 0 ? timedDamage / timedSeconds : 0;
 		double accuracy = totalAttempts > 0 ? (double) totalHits / totalAttempts : 0;
 
+		headingValue.setText(Formats.duration(timedSeconds) + " total");
+
 		addTile(Formats.dps(overallDps), "AVG DPS");
 		addTile(timedKills > 0 ? Formats.duration(timedSeconds / timedKills) : "—", "AVG KILL");
 		addTile(timedKills > 0 ? Formats.dps(bestDps) : "—", "BEST DPS");
@@ -143,7 +162,7 @@ class SummaryPanel extends JPanel
 		JPanel tile = new JPanel();
 		tile.setLayout(new BoxLayout(tile, BoxLayout.Y_AXIS));
 		tile.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		tile.setBorder(new EmptyBorder(7, 9, 7, 6));
+		tile.setBorder(new EmptyBorder(8, 9, 8, 6));
 
 		JLabel valueLabel = new JLabel(value);
 		valueLabel.setFont(VALUE_FONT);
