@@ -18,8 +18,8 @@ public interface BossFightLogConfig extends Config
 	 * The two ways of being wrong are not equally bad. Too low and real fight time is deducted,
 	 * inflating DPS invisibly and dragging the comparison baseline with it. Too high and a genuine
 	 * bank trip counts as fight time, making one kill look slow, which is obvious on sight. So this
-	 * errs high: thirty six seconds without attacking inside a single fight is a bank trip or a
-	 * death, not a mechanic.
+	 * errs high, but not absurdly so: eighteen seconds without a single attack inside one fight is
+	 * already long past any mechanic, and short enough that a bank trip still gets caught.
 	 */
 	@ConfigItem(
 		keyName = "idleTimeoutTicks",
@@ -29,7 +29,7 @@ public interface BossFightLogConfig extends Config
 	)
 	default int idleTimeoutTicks()
 	{
-		return 60;
+		return 30;
 	}
 
 	/**
