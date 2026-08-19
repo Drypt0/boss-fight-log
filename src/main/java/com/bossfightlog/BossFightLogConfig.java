@@ -10,15 +10,22 @@ public interface BossFightLogConfig extends Config
 	String GROUP = "boss-fight-log";
 	String CLEAR_HISTORY = "clearHistory";
 
+	/**
+	 * Deliberately far above attack speed. Most weapons swing every four or five ticks, so a
+	 * threshold near ten is only two cycles, and two cycles of not attacking is ordinary combat:
+	 * stepping out of a hazard, eating, switching prayer. Deducting those shortens the fight and
+	 * inflates its DPS. Thirty ticks is eighteen seconds of not attacking at all, which no longer
+	 * describes fighting.
+	 */
 	@ConfigItem(
 		keyName = "idleTimeoutTicks",
 		name = "Idle timeout (ticks)",
-		description = "Pause the fight timer after this many ticks without landing a hit, so banking or walking away does not count against your DPS",
+		description = "Stop the fight timer after this many ticks without attacking, so banking or walking away mid-fight does not count against your DPS. Must stay well above your attack speed: a few missed attacks is still fighting",
 		position = 1
 	)
 	default int idleTimeoutTicks()
 	{
-		return 10;
+		return 30;
 	}
 
 	/**

@@ -26,8 +26,9 @@ import net.runelite.api.events.NpcDespawned;
  * <p>
  * Timing is measured in game ticks rather than wall clock, so it does not drift with frame rate or
  * latency. Gaps longer than the configured idle timeout are deducted entirely, which keeps banking
- * and travel out of the DPS figure. The timeout must stay above normal attack speed, or ordinary
- * gaps between attacks would be mistaken for idling.
+ * and travel out of the DPS figure. The timeout sits far above attack speed on purpose: a couple of
+ * missed attack cycles is ordinary combat, and deducting those would shorten fights and inflate
+ * every rate derived from them.
  */
 @Slf4j
 @Singleton
