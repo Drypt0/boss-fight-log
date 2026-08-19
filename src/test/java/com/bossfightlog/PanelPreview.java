@@ -33,6 +33,8 @@ public class PanelPreview
 		new BossFight("Thermonuclear smoke devil", 301, 12450, 187, 214, 46, 62, 640, Instant.now()),
 		// Flawless: no damage taken, perfect accuracy.
 		new BossFight("Obor", 106, 240, 0, 12, 0, 31, 47, Instant.now()),
+		// Killed inside a single tick: damage but no measurable rate.
+		new BossFight("Obor", 106, 240, 0, 2, 0, 180, 0, Instant.now()),
 		// Fast kill, tests the m:ss floor.
 		new BossFight("Bryophyta", 128, 180, 14, 9, 1, 38, 18, Instant.now()),
 		// Rough kill: heavy damage taken, poor accuracy.
@@ -46,7 +48,6 @@ public class PanelPreview
 	{
 		SwingUtilities.invokeLater(() -> {
 			BossFightLogPanel panel = new BossFightLogPanel();
-			panel.setClearListener(() -> panel.setFights(Arrays.asList()));
 			panel.setFights(SAMPLE);
 
 			JFrame frame = new JFrame("Boss Fight Log — panel preview");

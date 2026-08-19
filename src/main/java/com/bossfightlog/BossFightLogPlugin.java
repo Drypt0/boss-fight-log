@@ -18,6 +18,7 @@ import net.runelite.api.events.NpcChanged;
 import net.runelite.api.events.NpcDespawned;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
+import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
@@ -49,6 +50,9 @@ public class BossFightLogPlugin extends Plugin
 	private FightStore fightStore;
 
 	@Inject
+	private ConfigManager configManager;
+
+	@Inject
 	private ClientToolbar clientToolbar;
 
 	private final List<BossFight> fights = new ArrayList<>();
@@ -71,7 +75,6 @@ public class BossFightLogPlugin extends Plugin
 		fightTracker.setFightListener(this::onFightComplete);
 
 		panel = new BossFightLogPanel();
-		panel.setClearListener(this::clearFights);
 
 		BufferedImage icon = ImageUtil.loadImageResource(BossFightLogPlugin.class, "icon.png");
 		navButton = NavigationButton.builder()
@@ -109,11 +112,38 @@ public class BossFightLogPlugin extends Plugin
 		return Collections.unmodifiableList(fights);
 	}
 
+	/**
+	 * Handles the settings toggle that wipes this character's history. The toggle is a trigger
+	 * rather than a stored preference, so it is switched straight back off once acted on.
+	 */
+	@Subscribe
+	public void onConfigChanged(ConfigChanged event)
+	{
+		if (!BossFightLogConfig.GROUP.equals(event.getGroup())
+			|| !BossFightLogConfig.CLEAR_HISTORY.equals(event.getKey())
+			|| !Boolean.parseBoolean(event.getNewValue()))
+		{
+			return;
+		}
+
+		configManager.setConfiguration(BossFightLogConfig.GROUP, BossFightLogConfig.CLEAR_HISTORY, false);
+		clearFights();
+	}
+
 	private void clearFights()
 	{
 		clientThread.invoke(() -> {
+			if (loadedCharacter == null)
+			{
+				log.debug("Nothing cleared: no character loaded");
+				return;
+			}
+
+			log.debug("Clearing {} recorded kills for {}", fights.size(), loadedCharacter);
 			fights.clear();
-			persist();
+			// Copied aside rather than simply overwritten. This is the one action that can destroy
+			// a history outright, and a confirmation is little comfort once it has been dismissed.
+			fightStore.saveWithBackup(loadedCharacter, fights);
 			updatePanel();
 		});
 	}

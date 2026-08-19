@@ -12,9 +12,14 @@ import java.io.Writer;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Consumer;
@@ -39,6 +44,13 @@ class FightStore
 	 * plugin is installed.
 	 */
 	static final int MAX_FIGHTS = 1000;
+
+	/**
+	 * How many superseded copies to keep alongside the live file.
+	 */
+	private static final int MAX_BACKUPS = 5;
+	private static final String BACKUP_SUFFIX = ".bak.json";
+	private static final DateTimeFormatter BACKUP_STAMP = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
 
 	private static final Type FIGHT_LIST = new TypeToken<List<BossFight>>()
 	{
@@ -77,6 +89,67 @@ class FightStore
 	{
 		List<BossFight> snapshot = new ArrayList<>(fights);
 		executor.execute(() -> writeFile(fileFor(character), snapshot));
+	}
+
+	/**
+	 * Persists after copying whatever is on disk aside first. Used for destructive changes, so a
+	 * mistaken clear costs a few clicks to undo rather than the entire history.
+	 *
+	 * @param fights snapshot to persist; the caller must not mutate it afterwards
+	 */
+	void saveWithBackup(String character, List<BossFight> fights)
+	{
+		List<BossFight> snapshot = new ArrayList<>(fights);
+		// Both steps run in one task so the copy cannot be scheduled after the overwrite.
+		executor.execute(() -> {
+			File file = fileFor(character);
+			backup(file);
+			writeFile(file, snapshot);
+		});
+	}
+
+	private void backup(File file)
+	{
+		if (!file.exists())
+		{
+			return;
+		}
+
+		try
+		{
+			String stamp = BACKUP_STAMP.format(LocalDateTime.now());
+			File copy = new File(directory, file.getName().replace(".json", "") + "-" + stamp + BACKUP_SUFFIX);
+			Files.copy(file.toPath(), copy.toPath(), StandardCopyOption.REPLACE_EXISTING);
+			log.debug("Backed up fight history to {}", copy);
+			prune(file.getName().replace(".json", ""));
+		}
+		catch (IOException | RuntimeException e)
+		{
+			log.warn("Could not back up fight history before overwriting {}", file, e);
+		}
+	}
+
+	/**
+	 * Keeps only the most recent backups, so the folder does not accumulate copies forever.
+	 */
+	private void prune(String prefix)
+	{
+		File[] backups = directory.listFiles((dir, name) ->
+			name.startsWith(prefix + "-") && name.endsWith(BACKUP_SUFFIX));
+
+		if (backups == null || backups.length <= MAX_BACKUPS)
+		{
+			return;
+		}
+
+		Arrays.sort(backups, Comparator.comparing(File::getName));
+		for (int i = 0; i < backups.length - MAX_BACKUPS; i++)
+		{
+			if (!backups[i].delete())
+			{
+				log.debug("Could not remove old backup {}", backups[i]);
+			}
+		}
 	}
 
 	private List<BossFight> readFile(File file)

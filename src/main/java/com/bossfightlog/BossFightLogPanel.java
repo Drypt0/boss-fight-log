@@ -27,14 +27,11 @@ class BossFightLogPanel extends PluginPanel
 {
 	private final SummaryPanel summary = new SummaryPanel();
 	private final JPanel content = new JPanel();
-	private final JLabel clearButton = new JLabel("Clear");
 	private final JLabel allKillsTab = new JLabel("All kills");
 	private final JLabel byBossTab = new JLabel("By boss");
 
 	private List<BossFight> fights = new ArrayList<>();
 	private boolean groupByBoss;
-	private Runnable onClear = () -> {
-	};
 
 	BossFightLogPanel()
 	{
@@ -49,11 +46,6 @@ class BossFightLogPanel extends PluginPanel
 		add(content, BorderLayout.CENTER);
 
 		setFights(Collections.emptyList());
-	}
-
-	void setClearListener(Runnable onClear)
-	{
-		this.onClear = onClear;
 	}
 
 	/**
@@ -91,8 +83,6 @@ class BossFightLogPanel extends PluginPanel
 			}
 		}
 
-		clearButton.setVisible(!fights.isEmpty());
-
 		content.revalidate();
 		content.repaint();
 	}
@@ -120,33 +110,7 @@ class BossFightLogPanel extends PluginPanel
 		title.setFont(FontManager.getRunescapeBoldFont());
 		title.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
 
-		clearButton.setFont(FontManager.getRunescapeSmallFont());
-		clearButton.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-		clearButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-		clearButton.setVisible(false);
-		clearButton.addMouseListener(new MouseAdapter()
-		{
-			@Override
-			public void mouseClicked(MouseEvent e)
-			{
-				onClear.run();
-			}
-
-			@Override
-			public void mouseEntered(MouseEvent e)
-			{
-				clearButton.setForeground(ColorScheme.BRAND_ORANGE);
-			}
-
-			@Override
-			public void mouseExited(MouseEvent e)
-			{
-				clearButton.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-			}
-		});
-
 		titleRow.add(title, BorderLayout.WEST);
-		titleRow.add(clearButton, BorderLayout.EAST);
 
 		header.add(titleRow, BorderLayout.NORTH);
 		header.add(summary, BorderLayout.CENTER);
