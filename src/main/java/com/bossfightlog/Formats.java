@@ -7,6 +7,11 @@ import java.awt.Color;
  */
 final class Formats
 {
+	/**
+	 * Differences smaller than this are rounding rather than performance.
+	 */
+	private static final double TREND_NOISE_THRESHOLD = 0.01d;
+
 	private Formats()
 	{
 	}
@@ -61,8 +66,23 @@ final class Formats
 	}
 
 	/**
-	 * Renders a trend as coloured HTML, or nothing at all when there is no baseline to compare
-	 * against. Arrow glyphs are avoided because the RuneScape font does not carry them.
+	 * As {@link #percentSigned}, but keeping a decimal place. Used where rounding a small
+	 * difference to a signed zero would be more confusing than the extra digit.
+	 */
+	static String percentSignedPrecise(double fraction)
+	{
+		return String.format("%+.1f%%", fraction * 100);
+	}
+
+	/**
+	 * Renders a trend as coloured HTML.
+	 * <p>
+	 * A null fraction means there is nothing to compare against, and renders as nothing at all. A
+	 * fraction inside the noise threshold renders as "on par" instead: below a percent the sign is
+	 * rounding rather than performance, but staying silent would make an average kill look
+	 * identical to a first one, which are not the same thing at all.
+	 * <p>
+	 * Arrow glyphs are avoided because the RuneScape font does not carry them.
 	 */
 	static String trendHtml(Double fraction)
 	{
@@ -71,10 +91,10 @@ final class Formats
 			return "";
 		}
 
-		// Below a percent the difference is noise, and a flickering +0%/-0% reads as meaningful.
-		if (Math.abs(fraction) < 0.01)
+		if (Math.abs(fraction) < TREND_NOISE_THRESHOLD)
 		{
-			return "";
+			return "  <font color='" + hex(net.runelite.client.ui.ColorScheme.MEDIUM_GRAY_COLOR)
+				+ "'>on par</font>";
 		}
 
 		Color color = fraction > 0

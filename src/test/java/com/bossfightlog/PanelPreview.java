@@ -29,6 +29,9 @@ public class PanelPreview
 		new BossFight("Scurrius", 200, 548, 41, 26, 6, 42, 148, Instant.now()),
 		new BossFight("Scurrius", 200, 570, 8, 28, 1, 45, 96, Instant.now()),
 		new BossFight("Scurrius", 200, 559, 30, 27, 4, 39, 133, Instant.now()),
+		// Lands within a fraction of a percent of the other four: reads as on par, not as a
+		// blank, which is what a first kill looks like.
+		new BossFight("Scurrius", 200, 540, 25, 26, 4, 41, 120, Instant.now()),
 		// Longest name in the registry against the widest kill time.
 		new BossFight("Thermonuclear smoke devil", 301, 12450, 187, 214, 46, 62, 640, Instant.now()),
 		// Flawless: no damage taken, perfect accuracy.

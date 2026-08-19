@@ -105,7 +105,7 @@ class FightCard extends JPanel
 	{
 		String trend = dpsTrend == null
 			? "First recorded kill of this boss"
-			: Formats.percentSigned(dpsTrend) + " DPS against your other kills of this boss";
+			: Formats.percentSignedPrecise(dpsTrend) + " DPS against your other kills of this boss";
 
 		return "<html>"
 			+ "Max hit: " + fight.getMaxHit() + "<br>"
