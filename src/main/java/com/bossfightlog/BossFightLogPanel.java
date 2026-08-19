@@ -98,7 +98,7 @@ class BossFightLogPanel extends PluginPanel
 	{
 		JPanel spacer = new JPanel(new BorderLayout());
 		spacer.setOpaque(false);
-		spacer.setBorder(new EmptyBorder(0, 0, 4, 0));
+		spacer.setBorder(new EmptyBorder(0, 0, 6, 0));
 		spacer.setAlignmentX(Component.LEFT_ALIGNMENT);
 		spacer.add(card, BorderLayout.CENTER);
 		spacer.setMaximumSize(new Dimension(Integer.MAX_VALUE, spacer.getPreferredSize().height));

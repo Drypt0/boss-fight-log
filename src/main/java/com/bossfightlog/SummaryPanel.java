@@ -11,7 +11,9 @@ import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
+import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
 
@@ -33,11 +35,13 @@ class SummaryPanel extends JPanel
 	{
 		setLayout(new BorderLayout());
 		setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		setBorder(new EmptyBorder(6, 6, 6, 6));
+		setBorder(new CompoundBorder(
+			new LineBorder(ColorScheme.BORDER_COLOR, 1),
+			new EmptyBorder(1, 1, 1, 1)));
 		setAlignmentX(Component.LEFT_ALIGNMENT);
 
 		// The gap colour shows through as hairline rules between tiles.
-		grid.setBackground(ColorScheme.BORDER_COLOR);
+		grid.setBackground(ColorScheme.MEDIUM_GRAY_COLOR.darker());
 
 		add(grid, BorderLayout.CENTER);
 
@@ -59,7 +63,7 @@ class SummaryPanel extends JPanel
 			return;
 		}
 
-		grid.setBackground(ColorScheme.BORDER_COLOR);
+		grid.setBackground(ColorScheme.MEDIUM_GRAY_COLOR.darker());
 
 		int kills = fights.size();
 		int timedKills = 0;
@@ -139,7 +143,7 @@ class SummaryPanel extends JPanel
 		JPanel tile = new JPanel();
 		tile.setLayout(new BoxLayout(tile, BoxLayout.Y_AXIS));
 		tile.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		tile.setBorder(new EmptyBorder(4, 8, 4, 5));
+		tile.setBorder(new EmptyBorder(7, 9, 7, 6));
 
 		JLabel valueLabel = new JLabel(value);
 		valueLabel.setFont(VALUE_FONT);
