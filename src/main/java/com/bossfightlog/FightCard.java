@@ -61,7 +61,7 @@ class FightCard extends JPanel
 	{
 		return new CompoundBorder(
 			new MatteBorder(0, STRIPE_WIDTH, 0, 0, stripe),
-			new EmptyBorder(6, 8, 6, 8));
+			new EmptyBorder(5, 7, 5, 7));
 	}
 
 	/**

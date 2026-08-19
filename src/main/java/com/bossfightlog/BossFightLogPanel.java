@@ -39,8 +39,8 @@ class BossFightLogPanel extends PluginPanel
 
 	BossFightLogPanel()
 	{
-		setLayout(new BorderLayout(0, 6));
-		setBorder(new EmptyBorder(8, 8, 8, 8));
+		setLayout(new BorderLayout(0, 4));
+		setBorder(new EmptyBorder(6, 6, 6, 6));
 		setBackground(ColorScheme.DARK_GRAY_COLOR);
 
 		content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
@@ -67,7 +67,9 @@ class BossFightLogPanel extends PluginPanel
 	private void rebuild()
 	{
 		summary.update(fights);
-		status.setText(fights.isEmpty() ? "" : fights.size() + (fights.size() == 1 ? " kill" : " kills"));
+		status.setText(fights.isEmpty()
+			? ""
+			: fights.size() + " · " + Formats.duration(SummaryPanel.totalSeconds(fights)));
 		updateTabStyles();
 
 		content.removeAll();
