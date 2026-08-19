@@ -28,13 +28,11 @@ public class BossRegistry
 	{
 		private final String name;
 		private final Set<String> members;
-		private final Set<String> adds;
 
-		private Encounter(String name, Set<String> members, Set<String> adds)
+		private Encounter(String name, Set<String> members)
 		{
 			this.name = name;
 			this.members = members;
-			this.adds = adds;
 		}
 
 		String getName()
@@ -48,14 +46,6 @@ public class BossRegistry
 		boolean isMember(String npcName)
 		{
 			return npcName != null && members.contains(npcName);
-		}
-
-		/**
-		 * Adds contribute their damage to the fight but their deaths do not end it.
-		 */
-		boolean isAdd(String npcName)
-		{
-			return npcName != null && adds.contains(npcName);
 		}
 	}
 
@@ -138,14 +128,12 @@ public class BossRegistry
 	{
 		for (String boss : SOLO)
 		{
-			register(new Encounter(boss, singleton(boss), Collections.emptySet()));
+			register(new Encounter(boss, singleton(boss)));
 		}
 
 		// Fought as a pair and recorded as one kill.
-		register(new Encounter("Grotesque Guardians",
-			names("Dusk", "Dawn"), Collections.emptySet()));
-		register(new Encounter("Royal Titans",
-			names("Branda the Fire Queen", "Eldric the Ice King"), Collections.emptySet()));
+		register(new Encounter("Grotesque Guardians", names("Dusk", "Dawn")));
+		register(new Encounter("Royal Titans", names("Branda the Fire Queen", "Eldric the Ice King")));
 	}
 
 	private void register(Encounter encounter)
@@ -153,10 +141,6 @@ public class BossRegistry
 		for (String member : encounter.members)
 		{
 			byNpcName.put(member, encounter);
-		}
-		for (String add : encounter.adds)
-		{
-			byNpcName.put(add, encounter);
 		}
 	}
 

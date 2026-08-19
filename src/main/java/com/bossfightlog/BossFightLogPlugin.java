@@ -3,7 +3,6 @@ package com.bossfightlog;
 import com.google.inject.Provides;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
@@ -39,9 +38,6 @@ public class BossFightLogPlugin extends Plugin
 
 	@Inject
 	private ClientThread clientThread;
-
-	@Inject
-	private BossFightLogConfig config;
 
 	@Inject
 	private FightTracker fightTracker;
@@ -102,14 +98,6 @@ public class BossFightLogPlugin extends Plugin
 		panel = null;
 
 		log.debug("Boss Fight Log stopped");
-	}
-
-	/**
-	 * Recorded kills, oldest first.
-	 */
-	public List<BossFight> getFights()
-	{
-		return Collections.unmodifiableList(fights);
 	}
 
 	/**

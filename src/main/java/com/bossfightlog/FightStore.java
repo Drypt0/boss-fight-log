@@ -4,12 +4,10 @@ import com.google.gson.Gson;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializer;
-import com.google.gson.reflect.TypeToken;
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
-import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -18,7 +16,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
@@ -51,10 +48,6 @@ class FightStore
 	private static final int MAX_BACKUPS = 5;
 	private static final String BACKUP_SUFFIX = ".bak.json";
 	private static final DateTimeFormatter BACKUP_STAMP = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
-
-	private static final Type FIGHT_LIST = new TypeToken<List<BossFight>>()
-	{
-	}.getType();
 
 	private final Gson gson;
 	private final ScheduledExecutorService executor;
@@ -161,8 +154,8 @@ class FightStore
 
 		try (Reader reader = Files.newBufferedReader(file.toPath(), StandardCharsets.UTF_8))
 		{
-			List<BossFight> fights = gson.fromJson(reader, FIGHT_LIST);
-			return fights != null ? fights : new ArrayList<>();
+			BossFight[] fights = gson.fromJson(reader, BossFight[].class);
+			return fights == null ? new ArrayList<>() : new ArrayList<>(Arrays.asList(fights));
 		}
 		catch (IOException | RuntimeException e)
 		{
@@ -179,7 +172,7 @@ class FightStore
 			Files.createDirectories(directory.toPath());
 			try (Writer writer = Files.newBufferedWriter(file.toPath(), StandardCharsets.UTF_8))
 			{
-				gson.toJson(fights, FIGHT_LIST, writer);
+				gson.toJson(fights.toArray(new BossFight[0]), BossFight[].class, writer);
 			}
 		}
 		catch (IOException | RuntimeException e)
@@ -214,10 +207,5 @@ class FightStore
 			return fights;
 		}
 		return new ArrayList<>(fights.subList(fights.size() - MAX_FIGHTS, fights.size()));
-	}
-
-	static List<BossFight> unmodifiable(List<BossFight> fights)
-	{
-		return Collections.unmodifiableList(fights);
 	}
 }

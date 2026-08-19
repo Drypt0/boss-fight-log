@@ -104,32 +104,4 @@ final class Formats
 		}
 		return Math.abs(fraction) < TREND_NOISE_THRESHOLD ? "on par" : percentSigned(fraction);
 	}
-
-	/**
-	 * Renders a trend as coloured HTML.
-	 * <p>
-	 * A null fraction means there is nothing to compare against, and renders as nothing at all. A
-	 * fraction inside the noise threshold renders as "on par" instead: below a percent the sign is
-	 * rounding rather than performance, but staying silent would make an average kill look
-	 * identical to a first one, which are not the same thing at all.
-	 * <p>
-	 * Arrow glyphs are avoided because the RuneScape font does not carry them.
-	 */
-	static String trendHtml(Double fraction)
-	{
-		if (fraction == null)
-		{
-			return "";
-		}
-
-		if (Math.abs(fraction) < TREND_NOISE_THRESHOLD)
-		{
-			return "  <font color='" + hex(net.runelite.client.ui.ColorScheme.MEDIUM_GRAY_COLOR)
-				+ "'>on par</font>";
-		}
-
-		Color color = fraction > 0 ? TREND_UP : TREND_DOWN;
-
-		return "  <font color='" + hex(color) + "'>" + percentSigned(fraction) + "</font>";
-	}
 }
