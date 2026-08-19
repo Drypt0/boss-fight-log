@@ -13,9 +13,13 @@ public interface BossFightLogConfig extends Config
 	/**
 	 * Deliberately far above attack speed. Most weapons swing every four or five ticks, so a
 	 * threshold near ten is only two cycles, and two cycles of not attacking is ordinary combat:
-	 * stepping out of a hazard, eating, switching prayer. Deducting those shortens the fight and
-	 * inflates its DPS. Thirty ticks is eighteen seconds of not attacking at all, which no longer
-	 * describes fighting.
+	 * stepping out of a hazard, eating, switching prayer.
+	 * <p>
+	 * The two ways of being wrong are not equally bad. Too low and real fight time is deducted,
+	 * inflating DPS invisibly and dragging the comparison baseline with it. Too high and a genuine
+	 * bank trip counts as fight time, making one kill look slow, which is obvious on sight. So this
+	 * errs high: thirty six seconds without attacking inside a single fight is a bank trip or a
+	 * death, not a mechanic.
 	 */
 	@ConfigItem(
 		keyName = "idleTimeoutTicks",
@@ -25,7 +29,7 @@ public interface BossFightLogConfig extends Config
 	)
 	default int idleTimeoutTicks()
 	{
-		return 30;
+		return 60;
 	}
 
 	/**
