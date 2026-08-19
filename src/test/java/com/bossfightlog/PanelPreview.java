@@ -120,6 +120,10 @@ public class PanelPreview
 		SwingUtilities.invokeAndWait(() -> {
 			holder[0] = new BossFightLogPanel();
 			holder[0].setFights(SAMPLE);
+			if (System.getProperty("bfl.grouped") != null)
+			{
+				holder[0].setGroupByBoss(true);
+			}
 		});
 
 		// setFights marshals onto the EDT, so let that queued rebuild run before measuring.

@@ -11,7 +11,9 @@ import java.util.List;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.MatteBorder;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.PluginPanel;
 
@@ -21,10 +23,16 @@ import net.runelite.client.ui.PluginPanel;
  */
 class GroupCard extends JPanel
 {
-	private static final java.awt.Font NAME_FONT = Fonts.regular(11f);
-	private static final java.awt.Font COUNT_FONT = Fonts.bold(13f);
-	private static final java.awt.Font DPS_FONT = Fonts.bold(16f);
-	private static final java.awt.Font CAPTION_FONT = Fonts.regular(10f);
+	private static final java.awt.Font NAME_FONT = Fonts.regular(12f);
+	private static final java.awt.Font COUNT_FONT = Fonts.monoBold(14f);
+	private static final java.awt.Font DPS_FONT = Fonts.monoBold(16f);
+	private static final java.awt.Font CAPTION_FONT = Fonts.mono(10f);
+
+	/**
+	 * A neutral stripe of the same width as a kill card's, so the two views line up down their
+	 * left edge. It carries no colour because a group has nothing to be compared against.
+	 */
+	private static final int STRIPE_WIDTH = 2;
 	private static final int MAX_WIDTH = PluginPanel.PANEL_WIDTH - PluginPanel.SCROLLBAR_WIDTH;
 
 	private final BossGroup group;
@@ -42,8 +50,10 @@ class GroupCard extends JPanel
 		this.allFights = allFights;
 
 		setLayout(new BorderLayout());
-		setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		setBorder(new EmptyBorder(6, 8, 6, 8));
+		setBackground(Formats.CARD_COLOR);
+		setBorder(new CompoundBorder(
+			new MatteBorder(0, STRIPE_WIDTH, 0, 0, ColorScheme.MEDIUM_GRAY_COLOR),
+			new EmptyBorder(5, 8, 5, 8)));
 		setAlignmentX(Component.LEFT_ALIGNMENT);
 		setCursor(new Cursor(Cursor.HAND_CURSOR));
 
@@ -84,12 +94,12 @@ class GroupCard extends JPanel
 		JPanel body = new JPanel();
 		body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
 		body.setOpaque(false);
-		body.setBorder(new EmptyBorder(3, 0, 0, 0));
+		body.setBorder(new EmptyBorder(1, 0, 0, 0));
 
 		String muted = Formats.hex(ColorScheme.MEDIUM_GRAY_COLOR);
 
 		JLabel dps = new JLabel("<html>" + Formats.dps(group.getAverageDps())
-			+ " <font color='" + muted + "'>avg dps</font></html>");
+			+ " <font color='" + muted + "'>AVG DPS</font></html>");
 		dps.setFont(DPS_FONT);
 		dps.setForeground(ColorScheme.TEXT_COLOR);
 		dps.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -97,7 +107,7 @@ class GroupCard extends JPanel
 		JLabel detail = new JLabel("<html><font color='" + muted + "'>"
 			+ "avg " + Formats.duration(group.getAverageSeconds())
 			+ " &middot; best " + Formats.duration(group.getBestSeconds())
-			+ " &middot; " + Formats.percent(group.getAccuracy()) + " acc"
+			+ " &middot; " + Formats.percent(group.getAccuracy())
 			+ "</font></html>");
 		detail.setFont(CAPTION_FONT);
 		detail.setAlignmentX(Component.LEFT_ALIGNMENT);

@@ -47,6 +47,7 @@ tasks.register('previewRender', JavaExec) {
 	classpath = sourceSets.test.runtimeClasspath
 	mainClass = 'com.bossfightlog.PanelPreview'
 	args = [project.findProperty('out') ?: 'panel.png']
+	if (project.hasProperty('grouped')) { systemProperty 'bfl.grouped', 'true' }
 }
 
 tasks.register('preview', JavaExec) {

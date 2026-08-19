@@ -64,6 +64,18 @@ class BossFightLogPanel extends PluginPanel
 		});
 	}
 
+	/**
+	 * Chooses the view. Used by the preview so the grouped cards can be inspected too; without it
+	 * only the flat list is ever rendered, which is how the grouped cards were left behind.
+	 */
+	void setGroupByBoss(boolean grouped)
+	{
+		SwingUtilities.invokeLater(() -> {
+			this.groupByBoss = grouped;
+			rebuild();
+		});
+	}
+
 	private void rebuild()
 	{
 		summary.update(fights);
