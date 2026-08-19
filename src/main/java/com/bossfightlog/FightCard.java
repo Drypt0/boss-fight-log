@@ -78,7 +78,7 @@ class FightCard extends JPanel
 		{
 			return ColorScheme.MEDIUM_GRAY_COLOR;
 		}
-		return dpsTrend > 0 ? ColorScheme.PROGRESS_COMPLETE_COLOR : ColorScheme.PROGRESS_ERROR_COLOR;
+		return dpsTrend > 0 ? Formats.TREND_UP : Formats.TREND_DOWN;
 	}
 
 	private static JPanel buildHeader(BossFight fight)

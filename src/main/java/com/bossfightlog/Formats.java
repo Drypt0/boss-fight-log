@@ -12,6 +12,13 @@ final class Formats
 	 */
 	private static final double TREND_NOISE_THRESHOLD = 0.01d;
 
+	/**
+	 * Sampled from the reference design. RuneLite's progress colours are pitched for a bar that
+	 * has to read at a glance across the client; on a dense panel of figures they shout.
+	 */
+	static final Color TREND_UP = new Color(0x4DBB5F);
+	static final Color TREND_DOWN = new Color(0xE04B4B);
+
 	private Formats()
 	{
 	}
@@ -111,9 +118,7 @@ final class Formats
 				+ "'>on par</font>";
 		}
 
-		Color color = fraction > 0
-			? net.runelite.client.ui.ColorScheme.PROGRESS_COMPLETE_COLOR
-			: net.runelite.client.ui.ColorScheme.PROGRESS_ERROR_COLOR;
+		Color color = fraction > 0 ? TREND_UP : TREND_DOWN;
 
 		return "  <font color='" + hex(color) + "'>" + percentSigned(fraction) + "</font>";
 	}
