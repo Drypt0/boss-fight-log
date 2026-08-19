@@ -153,13 +153,13 @@ class GroupCard extends JPanel
 			@Override
 			public void mouseEntered(MouseEvent e)
 			{
-				setBackground(ColorScheme.DARKER_GRAY_HOVER_COLOR);
+				setBackground(Formats.CARD_HOVER_COLOR);
 			}
 
 			@Override
 			public void mouseExited(MouseEvent e)
 			{
-				setBackground(ColorScheme.DARKER_GRAY_COLOR);
+				setBackground(Formats.CARD_COLOR);
 			}
 		};
 

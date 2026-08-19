@@ -19,6 +19,16 @@ final class Formats
 	static final Color TREND_UP = new Color(0x4DBB5F);
 	static final Color TREND_DOWN = new Color(0xE04B4B);
 
+	/**
+	 * Card fill, and the fill while hovered.
+	 * <p>
+	 * RuneLite's hover colour doubles the luminance of a card, from grey 30 to grey 60, which is
+	 * built for list rows on a lighter background and reads as a flash here. Eight points is enough
+	 * to show which card the pointer is on without the panel lighting up under it.
+	 */
+	static final Color CARD_COLOR = new Color(30, 30, 30);
+	static final Color CARD_HOVER_COLOR = new Color(38, 38, 38);
+
 	private Formats()
 	{
 	}

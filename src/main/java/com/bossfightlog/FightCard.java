@@ -168,13 +168,13 @@ class FightCard extends JPanel
 			@Override
 			public void mouseEntered(MouseEvent e)
 			{
-				card.setBackground(ColorScheme.DARKER_GRAY_HOVER_COLOR);
+				card.setBackground(Formats.CARD_HOVER_COLOR);
 			}
 
 			@Override
 			public void mouseExited(MouseEvent e)
 			{
-				card.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+				card.setBackground(Formats.CARD_COLOR);
 			}
 		};
 
