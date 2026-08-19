@@ -28,8 +28,8 @@ import net.runelite.client.ui.FontManager;
  */
 class SummaryPanel extends JPanel
 {
-	private static final Font VALUE_FONT = Fonts.monoBold(16f);
-	private static final Font CAPTION_FONT = Fonts.caption(9f);
+	private static final Font VALUE_FONT = Fonts.monoBold(17f);
+	private static final Font CAPTION_FONT = Fonts.caption(10f);
 
 	/**
 	 * Hairline rules between tiles. The grid draws them by letting its background show through

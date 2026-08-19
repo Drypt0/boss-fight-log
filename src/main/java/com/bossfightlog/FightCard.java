@@ -28,14 +28,14 @@ import net.runelite.client.ui.PluginPanel;
  */
 class FightCard extends JPanel
 {
-	private static final Font DPS_FONT = Fonts.monoBold(15f);
-	private static final Font NAME_FONT = Fonts.regular(11f);
-	private static final Font TIME_FONT = Fonts.monoBold(13f);
+	private static final Font DPS_FONT = Fonts.monoBold(16f);
+	private static final Font NAME_FONT = Fonts.regular(12f);
+	private static final Font TIME_FONT = Fonts.monoBold(14f);
 	/**
 	 * The supporting line is the widest thing on a card and monospaced text is wider than
 	 * proportional, so it takes a size down to survive five figure damage totals.
 	 */
-	private static final Font CAPTION_FONT = Fonts.mono(9f);
+	private static final Font CAPTION_FONT = Fonts.mono(10f);
 	private static final int STRIPE_WIDTH = 3;
 
 	/**
@@ -133,7 +133,7 @@ class FightCard extends JPanel
 		JLabel detail = new JLabel("<html>"
 			+ "<font color='" + muted + "'>" + Formats.number(fight.getDamageDealt()) + " dealt &middot; </font>"
 			+ "<font color='" + muted + "'>" + Formats.number(fight.getDamageTaken()) + " taken</font>"
-			+ "<font color='" + muted + "'> &middot; " + Formats.percent(fight.getAccuracy()) + " acc</font>"
+			+ "<font color='" + muted + "'> &middot; " + Formats.percent(fight.getAccuracy()) + "</font>"
 			+ "</html>");
 		detail.setFont(CAPTION_FONT);
 		detail.setBorder(new EmptyBorder(1, 0, 0, 0));
