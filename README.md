@@ -48,6 +48,11 @@ bosses. Grotesque Guardians and the Royal Titans are recorded as one kill coveri
 Raids and wave minigames are not covered, other than their final boss where that boss is a single
 NPC.
 
+## Examples:
+
+<img width="230" height="559" alt="image" src="https://github.com/user-attachments/assets/5008d719-d55f-47e4-859d-9a31c2c66d6e" />
+
+
 ## Licence
 
 BSD 2-Clause. See [LICENSE](LICENSE).
