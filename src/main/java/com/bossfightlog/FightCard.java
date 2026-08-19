@@ -36,7 +36,7 @@ class FightCard extends JPanel
 	 * proportional, so it takes a size down to survive five figure damage totals.
 	 */
 	private static final Font CAPTION_FONT = Fonts.mono(10f);
-	private static final int STRIPE_WIDTH = 3;
+	private static final int STRIPE_WIDTH = 2;
 
 	/**
 	 * Usable width inside the panel once its scrollbar has taken its share.
