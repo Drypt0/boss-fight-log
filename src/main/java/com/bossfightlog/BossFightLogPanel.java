@@ -182,10 +182,8 @@ class BossFightLogPanel extends PluginPanel
 	{
 		tab.setBackground(selected ? ColorScheme.DARKER_GRAY_HOVER_COLOR : ColorScheme.DARKER_GRAY_COLOR);
 		tab.setForeground(selected ? ColorScheme.TEXT_COLOR : ColorScheme.MEDIUM_GRAY_COLOR);
-		// The underline marks the selected view; the padding below compensates so both tabs keep
-		// the same height and the strip does not shift as they are clicked.
-		tab.setBorder(selected
-			? new CompoundBorder(new MatteBorder(0, 0, 2, 0, ColorScheme.TEXT_COLOR), new EmptyBorder(6, 0, 4, 0))
-			: new EmptyBorder(6, 0, 6, 0));
+		// The fill and the text colour carry the selection on their own; an underline as well was
+		// one marker too many for a two item strip.
+		tab.setBorder(new EmptyBorder(6, 0, 6, 0));
 	}
 }
