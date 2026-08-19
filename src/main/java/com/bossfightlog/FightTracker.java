@@ -262,6 +262,11 @@ public class FightTracker
 		if (gap > idleTimeoutTicks())
 		{
 			fight.idleTicks += gap;
+			fight.idleGaps++;
+			// Logged individually because a deduction is the one thing that makes the recorded
+			// time disagree with the clock, and the size of each gap says what caused it.
+			log.debug("Deducted a {} tick gap ({}s) from {}",
+				gap, String.format("%.1f", gap * BossFight.SECONDS_PER_TICK), fight.name);
 		}
 		fight.lastActivityTick = tick;
 	}
@@ -286,6 +291,8 @@ public class FightTracker
 			duration,
 			Instant.now());
 
+		log.debug("Fight against {} spanned {} ticks, of which {} deducted across {} gaps",
+			fight.name, tick - fight.startTick, fight.idleTicks, fight.idleGaps);
 		log.debug("Completed fight: {}", result);
 		fightListener.accept(result);
 	}
@@ -310,6 +317,7 @@ public class FightTracker
 
 		private int lastActivityTick;
 		private int idleTicks;
+		private int idleGaps;
 		private int damageDealt;
 		private int damageTaken;
 		private int hits;
