@@ -113,10 +113,10 @@ class BossFightLogPanel extends PluginPanel
 		titleRow.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
 		JLabel title = new JLabel("Boss Fight Log");
-		title.setFont(FontManager.getDefaultBoldFont().deriveFont(13f));
+		title.setFont(Fonts.bold(13f));
 		title.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
 
-		status.setFont(FontManager.getDefaultFont().deriveFont(10f));
+		status.setFont(Fonts.regular(10f));
 		status.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
 		status.setHorizontalAlignment(SwingConstants.RIGHT);
 
@@ -145,7 +145,7 @@ class BossFightLogPanel extends PluginPanel
 
 	private void configureTab(JLabel tab, boolean grouped)
 	{
-		tab.setFont(FontManager.getDefaultBoldFont().deriveFont(11f));
+		tab.setFont(Fonts.bold(11f));
 		tab.setHorizontalAlignment(SwingConstants.CENTER);
 		tab.setOpaque(true);
 		tab.setBorder(new EmptyBorder(6, 0, 6, 0));

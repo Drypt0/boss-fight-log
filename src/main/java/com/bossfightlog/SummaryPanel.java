@@ -24,8 +24,8 @@ import net.runelite.client.ui.FontManager;
  */
 class SummaryPanel extends JPanel
 {
-	private static final Font VALUE_FONT = FontManager.getDefaultBoldFont().deriveFont(18f);
-	private static final Font CAPTION_FONT = FontManager.getDefaultFont().deriveFont(10f);
+	private static final Font VALUE_FONT = Fonts.bold(18f);
+	private static final Font CAPTION_FONT = Fonts.regular(10f);
 
 	private final JLabel heading = new JLabel("ALL TIME");
 	private final JLabel headingValue = new JLabel();

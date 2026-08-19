@@ -85,7 +85,7 @@ public class BossFightLogPlugin extends Plugin
 			.build();
 		clientToolbar.addNavigation(navButton);
 
-		log.debug("Boss Fight Log started");
+		log.debug("Boss Fight Log started, panel font: {}", Fonts.describe());
 	}
 
 	@Override

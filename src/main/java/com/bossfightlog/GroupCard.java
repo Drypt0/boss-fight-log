@@ -22,10 +22,10 @@ import net.runelite.client.ui.PluginPanel;
  */
 class GroupCard extends JPanel
 {
-	private static final java.awt.Font NAME_FONT = FontManager.getDefaultFont().deriveFont(11f);
-	private static final java.awt.Font COUNT_FONT = FontManager.getDefaultBoldFont().deriveFont(13f);
-	private static final java.awt.Font DPS_FONT = FontManager.getDefaultBoldFont().deriveFont(16f);
-	private static final java.awt.Font CAPTION_FONT = FontManager.getDefaultFont().deriveFont(10f);
+	private static final java.awt.Font NAME_FONT = Fonts.regular(11f);
+	private static final java.awt.Font COUNT_FONT = Fonts.bold(13f);
+	private static final java.awt.Font DPS_FONT = Fonts.bold(16f);
+	private static final java.awt.Font CAPTION_FONT = Fonts.regular(10f);
 	private static final int MAX_WIDTH = PluginPanel.PANEL_WIDTH - PluginPanel.SCROLLBAR_WIDTH;
 
 	private final BossGroup group;

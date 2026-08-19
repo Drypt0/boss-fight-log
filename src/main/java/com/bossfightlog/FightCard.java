@@ -28,10 +28,10 @@ import net.runelite.client.ui.PluginPanel;
  */
 class FightCard extends JPanel
 {
-	private static final Font DPS_FONT = FontManager.getDefaultBoldFont().deriveFont(16f);
-	private static final Font NAME_FONT = FontManager.getDefaultFont().deriveFont(11f);
-	private static final Font TIME_FONT = FontManager.getDefaultBoldFont().deriveFont(13f);
-	private static final Font CAPTION_FONT = FontManager.getDefaultFont().deriveFont(10f);
+	private static final Font DPS_FONT = Fonts.bold(16f);
+	private static final Font NAME_FONT = Fonts.regular(11f);
+	private static final Font TIME_FONT = Fonts.bold(13f);
+	private static final Font CAPTION_FONT = Fonts.regular(10f);
 	private static final int STRIPE_WIDTH = 3;
 
 	/**
