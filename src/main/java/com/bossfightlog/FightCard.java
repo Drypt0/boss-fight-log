@@ -36,6 +36,12 @@ class FightCard extends JPanel
 	 * proportional, so it takes a size down to survive five figure damage totals.
 	 */
 	private static final Font CAPTION_FONT = Fonts.mono(10f);
+
+	/**
+	 * The comparison is a headline number, not supporting detail, so it does not share the
+	 * supporting line's size.
+	 */
+	private static final Font TREND_FONT = Fonts.monoBold(11f);
 	private static final int STRIPE_WIDTH = 2;
 
 	/**
@@ -124,7 +130,7 @@ class FightCard extends JPanel
 		rate.setForeground(ColorScheme.TEXT_COLOR);
 
 		JLabel trend = new JLabel(Formats.trendText(dpsTrend), SwingConstants.RIGHT);
-		trend.setFont(CAPTION_FONT);
+		trend.setFont(TREND_FONT);
 		trend.setForeground(stripeColor(dpsTrend));
 
 		rateRow.add(rate, BorderLayout.CENTER);
