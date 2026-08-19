@@ -15,7 +15,10 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
+import javax.swing.border.MatteBorder;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.PluginPanel;
@@ -134,8 +137,8 @@ class BossFightLogPanel extends PluginPanel
 	private JPanel buildTabs()
 	{
 		JPanel tabs = new JPanel(new GridLayout(1, 2, 1, 0));
-		tabs.setBackground(ColorScheme.BORDER_COLOR);
-		tabs.setBorder(new EmptyBorder(2, 0, 0, 0));
+		tabs.setBackground(ColorScheme.MEDIUM_GRAY_COLOR.darker());
+		tabs.setBorder(new LineBorder(ColorScheme.MEDIUM_GRAY_COLOR.darker(), 1));
 
 		configureTab(allKillsTab, false);
 		configureTab(byBossTab, true);
@@ -150,7 +153,6 @@ class BossFightLogPanel extends PluginPanel
 		tab.setFont(Fonts.bold(11f));
 		tab.setHorizontalAlignment(SwingConstants.CENTER);
 		tab.setOpaque(true);
-		tab.setBorder(new EmptyBorder(6, 0, 6, 0));
 		tab.setCursor(new Cursor(Cursor.HAND_CURSOR));
 		tab.addMouseListener(new MouseAdapter()
 		{
@@ -180,5 +182,10 @@ class BossFightLogPanel extends PluginPanel
 	{
 		tab.setBackground(selected ? ColorScheme.DARKER_GRAY_HOVER_COLOR : ColorScheme.DARKER_GRAY_COLOR);
 		tab.setForeground(selected ? ColorScheme.TEXT_COLOR : ColorScheme.MEDIUM_GRAY_COLOR);
+		// The underline marks the selected view; the padding below compensates so both tabs keep
+		// the same height and the strip does not shift as they are clicked.
+		tab.setBorder(selected
+			? new CompoundBorder(new MatteBorder(0, 0, 2, 0, ColorScheme.TEXT_COLOR), new EmptyBorder(6, 0, 4, 0))
+			: new EmptyBorder(6, 0, 6, 0));
 	}
 }

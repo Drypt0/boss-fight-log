@@ -3,6 +3,7 @@ package com.bossfightlog;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Color;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.util.Collections;
@@ -14,6 +15,7 @@ import javax.swing.SwingConstants;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
+import javax.swing.border.MatteBorder;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
 
@@ -29,6 +31,12 @@ class SummaryPanel extends JPanel
 	private static final Font VALUE_FONT = Fonts.monoBold(16f);
 	private static final Font CAPTION_FONT = Fonts.caption(9f);
 
+	/**
+	 * Hairline rules between tiles. The grid draws them by letting its background show through
+	 * one pixel gaps, so this is the grid fill rather than a border colour.
+	 */
+	private static final Color RULE_COLOR = ColorScheme.MEDIUM_GRAY_COLOR.darker();
+
 	private final JLabel heading = new JLabel("SESSION");
 	private final JLabel headingValue = new JLabel();
 	private final JPanel grid = new JPanel(new GridLayout(0, 2, 1, 1));
@@ -43,7 +51,7 @@ class SummaryPanel extends JPanel
 		setAlignmentX(Component.LEFT_ALIGNMENT);
 
 		// The gap colour shows through as hairline rules between tiles.
-		grid.setBackground(ColorScheme.MEDIUM_GRAY_COLOR.darker());
+		grid.setBackground(RULE_COLOR);
 
 		heading.setFont(CAPTION_FONT);
 		heading.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
@@ -53,7 +61,9 @@ class SummaryPanel extends JPanel
 
 		JPanel headingRow = new JPanel(new BorderLayout());
 		headingRow.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		headingRow.setBorder(new EmptyBorder(6, 9, 6, 8));
+		headingRow.setBorder(new CompoundBorder(
+			new MatteBorder(0, 0, 1, 0, RULE_COLOR),
+			new EmptyBorder(6, 9, 6, 8)));
 		headingRow.add(heading, BorderLayout.WEST);
 		headingRow.add(headingValue, BorderLayout.EAST);
 
@@ -80,7 +90,7 @@ class SummaryPanel extends JPanel
 			return;
 		}
 
-		grid.setBackground(ColorScheme.MEDIUM_GRAY_COLOR.darker());
+		grid.setBackground(RULE_COLOR);
 
 		int kills = fights.size();
 		int timedKills = 0;
