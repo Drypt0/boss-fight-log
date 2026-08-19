@@ -14,6 +14,7 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
+import net.runelite.client.ui.PluginPanel;
 
 /**
  * One boss's aggregate row in the grouped view, which expands on click to reveal the individual
@@ -21,6 +22,12 @@ import net.runelite.client.ui.FontManager;
  */
 class GroupCard extends JPanel
 {
+	private static final java.awt.Font NAME_FONT = FontManager.getDefaultFont().deriveFont(11f);
+	private static final java.awt.Font COUNT_FONT = FontManager.getDefaultBoldFont().deriveFont(13f);
+	private static final java.awt.Font DPS_FONT = FontManager.getDefaultBoldFont().deriveFont(16f);
+	private static final java.awt.Font CAPTION_FONT = FontManager.getDefaultFont().deriveFont(10f);
+	private static final int MAX_WIDTH = PluginPanel.PANEL_WIDTH - PluginPanel.SCROLLBAR_WIDTH;
+
 	private final BossGroup group;
 	private final List<BossFight> allFights;
 	private final JPanel summaryRow = new JPanel(new BorderLayout());
@@ -63,11 +70,12 @@ class GroupCard extends JPanel
 
 		// Centre slot so a long boss name truncates rather than printing over the kill count.
 		JLabel name = new JLabel(group.getBossName() + " (lvl-" + group.getCombatLevel() + ")");
-		name.setFont(FontManager.getRunescapeSmallFont());
+		name.setFont(NAME_FONT);
 		name.setForeground(ColorScheme.TEXT_COLOR);
+		name.setMinimumSize(new Dimension(0, name.getPreferredSize().height));
 
 		killCount.setText(group.getKills() + (group.getKills() == 1 ? " kill" : " kills"));
-		killCount.setFont(FontManager.getRunescapeBoldFont());
+		killCount.setFont(COUNT_FONT);
 		killCount.setForeground(ColorScheme.BRAND_ORANGE);
 		killCount.setBorder(new EmptyBorder(0, 6, 0, 0));
 
@@ -83,7 +91,7 @@ class GroupCard extends JPanel
 
 		JLabel dps = new JLabel("<html>" + Formats.dps(group.getAverageDps())
 			+ " <font color='" + muted + "'>avg dps</font></html>");
-		dps.setFont(FontManager.getRunescapeBoldFont());
+		dps.setFont(DPS_FONT);
 		dps.setForeground(ColorScheme.TEXT_COLOR);
 		dps.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -92,7 +100,7 @@ class GroupCard extends JPanel
 			+ " &middot; best " + Formats.duration(group.getBestSeconds())
 			+ " &middot; " + Formats.percent(group.getAccuracy()) + " acc"
 			+ "</font></html>");
-		detail.setFont(FontManager.getRunescapeSmallFont());
+		detail.setFont(CAPTION_FONT);
 		detail.setAlignmentX(Component.LEFT_ALIGNMENT);
 
 		body.add(dps);
@@ -174,6 +182,25 @@ class GroupCard extends JPanel
 				child.addMouseListener(listener);
 			}
 		}
+	}
+
+	/**
+	 * The column this sits in is only ever as wide as the panel, so a long boss name must not be
+	 * allowed to report a preferred width past it. Without this the widest card widens the whole
+	 * column and every card loses its right hand edge.
+	 */
+	@Override
+	public Dimension getPreferredSize()
+	{
+		Dimension size = super.getPreferredSize();
+		return new Dimension(Math.min(size.width, MAX_WIDTH), size.height);
+	}
+
+	@Override
+	public Dimension getMinimumSize()
+	{
+		Dimension size = super.getMinimumSize();
+		return new Dimension(0, size.height);
 	}
 
 	@Override

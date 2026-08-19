@@ -75,6 +75,20 @@ final class Formats
 	}
 
 	/**
+	 * The trend as plain text for a standalone label, where the colour is carried by the component
+	 * rather than by markup. Empty when there is no baseline; "on par" inside the noise threshold,
+	 * because a blank there would look identical to a first kill.
+	 */
+	static String trendText(Double fraction)
+	{
+		if (fraction == null)
+		{
+			return "";
+		}
+		return Math.abs(fraction) < TREND_NOISE_THRESHOLD ? "on par" : percentSigned(fraction);
+	}
+
+	/**
 	 * Renders a trend as coloured HTML.
 	 * <p>
 	 * A null fraction means there is nothing to compare against, and renders as nothing at all. A

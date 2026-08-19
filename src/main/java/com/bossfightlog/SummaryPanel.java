@@ -3,6 +3,7 @@ package com.bossfightlog;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.GridLayout;
 import java.util.Collections;
 import java.util.List;
@@ -10,23 +11,25 @@ import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
-import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.MatteBorder;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
 
 /**
- * Session totals across every recorded kill.
+ * Totals across every recorded kill, as a grid of stat tiles.
  * <p>
- * Kills and average DPS are promoted to a hero row because they are what the panel is glanced at
- * for; everything else is supporting detail in a quieter list below a divider. A flat list of
- * equally weighted rows makes the reader search for the number they came for.
+ * Each tile is a figure over a caption rather than a label beside a value, so the numbers line up
+ * as a block and the eye lands on them first. The RuneScape fonts are bitmaps and cannot be scaled,
+ * so the headline figures use the default font, which is a real outline font.
  */
 class SummaryPanel extends JPanel
 {
-	private final JPanel hero = new JPanel(new GridLayout(1, 2, 4, 0));
-	private final JPanel details = new JPanel();
+	private static final Font VALUE_FONT = FontManager.getDefaultBoldFont().deriveFont(18f);
+	private static final Font CAPTION_FONT = FontManager.getDefaultFont().deriveFont(10f);
+
+	private final JLabel heading = new JLabel("ALL TIME");
+	private final JLabel headingValue = new JLabel();
+	private final JPanel grid = new JPanel(new GridLayout(0, 2, 1, 1));
 
 	SummaryPanel()
 	{
@@ -35,32 +38,44 @@ class SummaryPanel extends JPanel
 		setBorder(new EmptyBorder(8, 8, 8, 8));
 		setAlignmentX(Component.LEFT_ALIGNMENT);
 
-		hero.setOpaque(false);
-		hero.setBorder(new EmptyBorder(0, 0, 8, 0));
+		heading.setFont(CAPTION_FONT);
+		heading.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
+		headingValue.setFont(CAPTION_FONT);
+		headingValue.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
+		headingValue.setHorizontalAlignment(SwingConstants.RIGHT);
 
-		details.setLayout(new BoxLayout(details, BoxLayout.Y_AXIS));
-		details.setOpaque(false);
+		JPanel headingRow = new JPanel(new BorderLayout());
+		headingRow.setOpaque(false);
+		headingRow.setBorder(new EmptyBorder(0, 2, 6, 2));
+		headingRow.add(heading, BorderLayout.WEST);
+		headingRow.add(headingValue, BorderLayout.EAST);
 
-		add(hero, BorderLayout.NORTH);
-		add(details, BorderLayout.CENTER);
+		// The gap colour shows through as hairline rules between tiles.
+		grid.setBackground(ColorScheme.BORDER_COLOR);
+
+		add(headingRow, BorderLayout.NORTH);
+		add(grid, BorderLayout.CENTER);
 
 		update(Collections.emptyList());
 	}
 
 	void update(List<BossFight> fights)
 	{
-		hero.removeAll();
-		details.removeAll();
+		grid.removeAll();
 
 		if (fights.isEmpty())
 		{
+			headingValue.setText("");
+			grid.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 			JLabel empty = new JLabel("No kills recorded yet", SwingConstants.CENTER);
-			empty.setFont(FontManager.getRunescapeSmallFont());
+			empty.setFont(CAPTION_FONT);
 			empty.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
-			hero.add(empty);
+			grid.add(empty);
 			revalidateAll();
 			return;
 		}
+
+		grid.setBackground(ColorScheme.BORDER_COLOR);
 
 		int kills = fights.size();
 		int timedKills = 0;
@@ -77,92 +92,78 @@ class SummaryPanel extends JPanel
 			totalTaken += fight.getDamageTaken();
 			totalHits += fight.getHits();
 			totalAttempts += fight.getHits() + fight.getMisses();
+			totalDamage += fight.getDamageDealt();
 
-			// Kills landed inside a single tick have damage but no duration. They are counted
-			// as kills, but contribute to no figure that divides one by the other.
+			// Kills landed inside a single tick have damage but no duration. They are counted as
+			// kills, but contribute to no figure that divides one by the other.
 			if (!fight.isDpsMeasurable())
 			{
 				continue;
 			}
 
 			timedKills++;
-			totalDamage += fight.getDamageDealt();
 			totalTicks += fight.getDurationTicks();
 			bestDps = Math.max(bestDps, fight.getDps());
 			bestTime = Math.min(bestTime, fight.getDurationSeconds());
 		}
 
-		double totalSeconds = totalTicks * BossFight.SECONDS_PER_TICK;
+		double timedSeconds = totalTicks * BossFight.SECONDS_PER_TICK;
+		double timedDamage = 0;
+		for (BossFight fight : fights)
+		{
+			if (fight.isDpsMeasurable())
+			{
+				timedDamage += fight.getDamageDealt();
+			}
+		}
+
 		// Overall DPS is total damage over total time rather than the mean of each kill's DPS, so a
 		// long fight counts for more than a short one.
-		double overallDps = totalSeconds > 0 ? totalDamage / totalSeconds : 0;
+		double overallDps = timedSeconds > 0 ? timedDamage / timedSeconds : 0;
 		double accuracy = totalAttempts > 0 ? (double) totalHits / totalAttempts : 0;
 
-		hero.add(heroStat(Formats.number(kills), kills == 1 ? "KILL" : "KILLS"));
-		hero.add(heroStat(Formats.dps(overallDps), "AVG DPS"));
+		headingValue.setText(Formats.duration(timedSeconds) + " total");
 
-		details.setBorder(new CompoundBorder(
-			new MatteBorder(1, 0, 0, 0, ColorScheme.BORDER_COLOR),
-			new EmptyBorder(4, 0, 0, 0)));
-		addDetail("Avg kill", timedKills > 0 ? Formats.duration(totalSeconds / timedKills) : "—");
-		addDetail("Best kill", bestTime == Double.MAX_VALUE ? "—" : Formats.duration(bestTime));
-		addDetail("Best DPS", timedKills > 0 ? Formats.dps(bestDps) : "—");
-		addDetail("Total time", Formats.duration(totalSeconds));
-		addDetail("Dmg taken", Formats.number(totalTaken));
-		addDetail("Accuracy", Formats.percent(accuracy));
+		addTile(Formats.dps(overallDps), "AVG DPS");
+		addTile(timedKills > 0 ? Formats.duration(timedSeconds / timedKills) : "—", "AVG KILL");
+		addTile(timedKills > 0 ? Formats.dps(bestDps) : "—", "BEST DPS");
+		addTile(bestTime == Double.MAX_VALUE ? "—" : Formats.duration(bestTime), "BEST KILL");
+		addTile(Formats.number(totalDamage), "DMG DEALT");
+		addTile(Formats.number(totalTaken), "DMG TAKEN");
+		addTile(Formats.percent(accuracy), "ACCURACY");
+		addTile(Formats.number(kills), "KILLS");
 
 		revalidateAll();
 	}
 
-	private static JPanel heroStat(String value, String caption)
+	private void addTile(String value, String caption)
 	{
-		JPanel block = new JPanel();
-		block.setLayout(new BoxLayout(block, BoxLayout.Y_AXIS));
-		block.setOpaque(false);
+		JPanel tile = new JPanel();
+		tile.setLayout(new BoxLayout(tile, BoxLayout.Y_AXIS));
+		tile.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+		tile.setBorder(new EmptyBorder(8, 9, 8, 6));
 
-		JLabel valueLabel = new JLabel(value, SwingConstants.CENTER);
-		valueLabel.setFont(FontManager.getRunescapeBoldFont());
-		valueLabel.setForeground(ColorScheme.BRAND_ORANGE);
-		valueLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+		JLabel valueLabel = new JLabel(value);
+		valueLabel.setFont(VALUE_FONT);
+		valueLabel.setForeground(ColorScheme.TEXT_COLOR);
+		valueLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-		JLabel captionLabel = new JLabel(caption, SwingConstants.CENTER);
-		captionLabel.setFont(FontManager.getRunescapeSmallFont());
+		JLabel captionLabel = new JLabel(caption);
+		captionLabel.setFont(CAPTION_FONT);
 		captionLabel.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
-		captionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+		captionLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-		block.add(valueLabel);
-		block.add(captionLabel);
-		return block;
-	}
-
-	private void addDetail(String label, String value)
-	{
-		JPanel row = new JPanel(new BorderLayout());
-		row.setOpaque(false);
-		row.setBorder(new EmptyBorder(3, 0, 0, 0));
-
-		JLabel key = new JLabel(label);
-		key.setFont(FontManager.getRunescapeSmallFont());
-		key.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
-
-		// Values are right-aligned so the column reads as a column rather than a ragged edge.
-		JLabel val = new JLabel(value, SwingConstants.RIGHT);
-		val.setFont(FontManager.getRunescapeSmallFont());
-		val.setForeground(ColorScheme.TEXT_COLOR);
-
-		row.add(key, BorderLayout.WEST);
-		row.add(val, BorderLayout.EAST);
-
-		row.setMaximumSize(new Dimension(Integer.MAX_VALUE, row.getPreferredSize().height));
-		details.add(row);
+		tile.add(valueLabel);
+		tile.add(captionLabel);
+		grid.add(tile);
 	}
 
 	private void revalidateAll()
 	{
-		hero.revalidate();
-		hero.repaint();
-		details.revalidate();
-		details.repaint();
+		grid.revalidate();
+		grid.repaint();
+		revalidate();
+		repaint();
 	}
 
 	@Override

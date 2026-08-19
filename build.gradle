@@ -42,6 +42,13 @@ tasks.register('run', JavaExec) {
 	args "--developer-mode", "--debug"
 }
 
+tasks.register('previewRender', JavaExec) {
+	description = 'Renders the side panel to a PNG for inspection.'
+	classpath = sourceSets.test.runtimeClasspath
+	mainClass = 'com.bossfightlog.PanelPreview'
+	args = [project.findProperty('out') ?: 'panel.png']
+}
+
 tasks.register('preview', JavaExec) {
 	description = 'Renders the side panel with sample kills, without launching the client.'
 	classpath = sourceSets.test.runtimeClasspath

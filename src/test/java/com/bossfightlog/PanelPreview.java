@@ -1,9 +1,15 @@
 package com.bossfightlog;
 
 import java.awt.BorderLayout;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import javax.imageio.ImageIO;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 import net.runelite.client.ui.ColorScheme;
@@ -47,8 +53,14 @@ public class PanelPreview
 		new BossFight("Vet'ion", 454, 31200, 2450, 640, 190, 74, 6400, Instant.now())
 	);
 
-	public static void main(String[] args)
+	public static void main(String[] args) throws Exception
 	{
+		if (args.length > 0)
+		{
+			renderToFile(args[0]);
+			return;
+		}
+
 		SwingUtilities.invokeLater(() -> {
 			BossFightLogPanel panel = new BossFightLogPanel();
 			panel.setFights(SAMPLE);
@@ -62,4 +74,97 @@ public class PanelPreview
 			frame.setVisible(true);
 		});
 	}
+	/**
+	 * Paints the panel into a PNG without showing a window, so the layout can be inspected as a
+	 * file rather than only with a pair of eyes in front of the client.
+	 */
+	/** Prints any component demanding more width than the panel allows. */
+	private static void dumpWide(java.awt.Component c, int depth)
+	{
+		int limit = PluginPanel.PANEL_WIDTH;
+		if (c.getPreferredSize().width > limit)
+		{
+			StringBuilder pad = new StringBuilder();
+			for (int i = 0; i < depth; i++)
+			{
+				pad.append("  ");
+			}
+			String text = c instanceof javax.swing.JLabel ? " \"" + ((javax.swing.JLabel) c).getText() + "\"" : "";
+			System.out.println(pad + c.getClass().getSimpleName() + " pref=" + c.getPreferredSize().width + text);
+		}
+		if (c instanceof java.awt.Container)
+		{
+			for (java.awt.Component child : ((java.awt.Container) c).getComponents())
+			{
+				dumpWide(child, depth + 1);
+			}
+		}
+	}
+
+	/** Forces layout through the whole tree, which setSize alone does not do for children. */
+	private static void layOutTree(java.awt.Component c)
+	{
+		c.doLayout();
+		if (c instanceof java.awt.Container)
+		{
+			for (java.awt.Component child : ((java.awt.Container) c).getComponents())
+			{
+				layOutTree(child);
+			}
+		}
+	}
+
+	private static void renderToFile(String path) throws Exception
+	{
+		final BossFightLogPanel[] holder = new BossFightLogPanel[1];
+		SwingUtilities.invokeAndWait(() -> {
+			holder[0] = new BossFightLogPanel();
+			holder[0].setFights(SAMPLE);
+		});
+
+		// setFights marshals onto the EDT, so let that queued rebuild run before measuring.
+		SwingUtilities.invokeAndWait(() -> {
+		});
+
+		BossFightLogPanel panel = holder[0];
+		SwingUtilities.invokeAndWait(() -> {
+			JFrame frame = new JFrame();
+			JComponent wrapped = panel.getWrappedPanel();
+			frame.getContentPane().add(wrapped, BorderLayout.CENTER);
+			frame.pack();
+
+			// Size the wrapped panel itself, not the frame: a JFrame adds window borders, so
+			// sizing the frame leaves the scroll pane narrower than asked and its viewport
+			// narrower still, which clips the panel and looks like a layout bug that is not there.
+			int width = PluginPanel.PANEL_WIDTH + PluginPanel.SCROLLBAR_WIDTH;
+			int height = Math.max(panel.getPreferredSize().height + 4, 400);
+			wrapped.setSize(width, height);
+			wrapped.doLayout();
+			layOutTree(wrapped);
+
+			System.out.println("wrapped = " + wrapped.getSize() + ", panel = " + panel.getSize());
+
+			BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+			Graphics2D g = image.createGraphics();
+			g.setColor(ColorScheme.DARK_GRAY_COLOR);
+			g.fillRect(0, 0, width, height);
+			wrapped.printAll(g);
+			g.dispose();
+
+			try
+			{
+				ImageIO.write(image, "png", new File(path));
+				System.out.println("wrote " + path + " (" + width + "x" + height + ")");
+			}
+			catch (IOException e)
+			{
+				throw new RuntimeException(e);
+			}
+			frame.dispose();
+
+		});
+
+		System.exit(0);
+	}
+
 }

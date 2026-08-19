@@ -3,6 +3,8 @@ package com.bossfightlog;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.GridLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -11,6 +13,7 @@ import java.util.List;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import net.runelite.client.ui.ColorScheme;
@@ -27,8 +30,9 @@ class BossFightLogPanel extends PluginPanel
 {
 	private final SummaryPanel summary = new SummaryPanel();
 	private final JPanel content = new JPanel();
-	private final JLabel allKillsTab = new JLabel("All kills");
-	private final JLabel byBossTab = new JLabel("By boss");
+	private final JLabel allKillsTab = new JLabel("ALL KILLS");
+	private final JLabel byBossTab = new JLabel("BY BOSS");
+	private final JLabel status = new JLabel();
 
 	private List<BossFight> fights = new ArrayList<>();
 	private boolean groupByBoss;
@@ -63,6 +67,7 @@ class BossFightLogPanel extends PluginPanel
 	private void rebuild()
 	{
 		summary.update(fights);
+		status.setText(fights.isEmpty() ? "" : fights.size() + (fights.size() == 1 ? " kill" : " kills"));
 		updateTabStyles();
 
 		content.removeAll();
@@ -94,6 +99,7 @@ class BossFightLogPanel extends PluginPanel
 		spacer.setBorder(new EmptyBorder(0, 0, 4, 0));
 		spacer.setAlignmentX(Component.LEFT_ALIGNMENT);
 		spacer.add(card, BorderLayout.CENTER);
+		spacer.setMaximumSize(new Dimension(Integer.MAX_VALUE, spacer.getPreferredSize().height));
 		return spacer;
 	}
 
@@ -107,10 +113,15 @@ class BossFightLogPanel extends PluginPanel
 		titleRow.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
 		JLabel title = new JLabel("Boss Fight Log");
-		title.setFont(FontManager.getRunescapeBoldFont());
+		title.setFont(FontManager.getDefaultBoldFont().deriveFont(13f));
 		title.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
 
+		status.setFont(FontManager.getDefaultFont().deriveFont(10f));
+		status.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
+		status.setHorizontalAlignment(SwingConstants.RIGHT);
+
 		titleRow.add(title, BorderLayout.WEST);
+		titleRow.add(status, BorderLayout.EAST);
 
 		header.add(titleRow, BorderLayout.NORTH);
 		header.add(summary, BorderLayout.CENTER);
@@ -120,21 +131,24 @@ class BossFightLogPanel extends PluginPanel
 
 	private JPanel buildTabs()
 	{
-		JPanel tabs = new JPanel(new BorderLayout());
-		tabs.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		JPanel tabs = new JPanel(new GridLayout(1, 2, 1, 0));
+		tabs.setBackground(ColorScheme.BORDER_COLOR);
 		tabs.setBorder(new EmptyBorder(2, 0, 0, 0));
 
 		configureTab(allKillsTab, false);
 		configureTab(byBossTab, true);
 
-		tabs.add(allKillsTab, BorderLayout.WEST);
-		tabs.add(byBossTab, BorderLayout.EAST);
+		tabs.add(allKillsTab);
+		tabs.add(byBossTab);
 		return tabs;
 	}
 
 	private void configureTab(JLabel tab, boolean grouped)
 	{
-		tab.setFont(FontManager.getRunescapeSmallFont());
+		tab.setFont(FontManager.getDefaultBoldFont().deriveFont(11f));
+		tab.setHorizontalAlignment(SwingConstants.CENTER);
+		tab.setOpaque(true);
+		tab.setBorder(new EmptyBorder(6, 0, 6, 0));
 		tab.setCursor(new Cursor(Cursor.HAND_CURSOR));
 		tab.addMouseListener(new MouseAdapter()
 		{
@@ -150,9 +164,19 @@ class BossFightLogPanel extends PluginPanel
 		});
 	}
 
+	/**
+	 * The selected tab is filled and lit; the other sits flush with the panel behind it, so which
+	 * view is showing is legible without reading either label.
+	 */
 	private void updateTabStyles()
 	{
-		allKillsTab.setForeground(groupByBoss ? ColorScheme.MEDIUM_GRAY_COLOR : ColorScheme.BRAND_ORANGE);
-		byBossTab.setForeground(groupByBoss ? ColorScheme.BRAND_ORANGE : ColorScheme.MEDIUM_GRAY_COLOR);
+		styleTab(allKillsTab, !groupByBoss);
+		styleTab(byBossTab, groupByBoss);
+	}
+
+	private static void styleTab(JLabel tab, boolean selected)
+	{
+		tab.setBackground(selected ? ColorScheme.DARKER_GRAY_HOVER_COLOR : ColorScheme.DARKER_GRAY_COLOR);
+		tab.setForeground(selected ? ColorScheme.BRAND_ORANGE : ColorScheme.MEDIUM_GRAY_COLOR);
 	}
 }
