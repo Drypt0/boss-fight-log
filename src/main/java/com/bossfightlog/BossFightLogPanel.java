@@ -138,7 +138,7 @@ class BossFightLogPanel extends PluginPanel
 	{
 		JPanel tabs = new JPanel(new GridLayout(1, 2, 1, 0));
 		tabs.setBackground(ColorScheme.MEDIUM_GRAY_COLOR.darker());
-		tabs.setBorder(new LineBorder(ColorScheme.MEDIUM_GRAY_COLOR.darker(), 1));
+		tabs.setBorder(new MatteBorder(1, 1, 1, 0, ColorScheme.MEDIUM_GRAY_COLOR.darker()));
 
 		configureTab(allKillsTab, false);
 		configureTab(byBossTab, true);

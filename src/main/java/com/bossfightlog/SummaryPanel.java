@@ -45,9 +45,9 @@ class SummaryPanel extends JPanel
 	{
 		setLayout(new BorderLayout());
 		setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		setBorder(new CompoundBorder(
-			new LineBorder(ColorScheme.BORDER_COLOR, 1),
-			new EmptyBorder(1, 1, 1, 1)));
+		// No right edge: the panel is already bounded there by the scrollbar, and no inset, so the
+		// rules between tiles run into the border instead of stopping a pixel short of it.
+		setBorder(new MatteBorder(1, 1, 1, 0, RULE_COLOR));
 		setAlignmentX(Component.LEFT_ALIGNMENT);
 
 		// The gap colour shows through as hairline rules between tiles.
