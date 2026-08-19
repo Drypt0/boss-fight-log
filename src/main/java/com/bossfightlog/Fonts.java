@@ -34,6 +34,21 @@ final class Fonts
 		"DejaVu Sans",
 	};
 
+	/**
+	 * Monospaced faces, in preference order. Cascadia and Consolas ship with Windows, the rest
+	 * cover the usual Linux and Mac installs, and Java's logical "Monospaced" is the backstop.
+	 */
+	private static final String[] PREFERRED_MONO = {
+		"Cascadia Mono",
+		"Consolas",
+		"JetBrains Mono",
+		"DejaVu Sans Mono",
+		"Menlo",
+	};
+
+	private static final String MONO_FAMILY;
+	private static final String MONO_SEMIBOLD_FAMILY;
+
 	private static final String FAMILY;
 	private static final String SEMIBOLD_FAMILY;
 
@@ -57,6 +72,20 @@ final class Fonts
 		// up the counters at small sizes.
 		SEMIBOLD_FAMILY = chosen != null && available.contains(chosen + " Semibold")
 			? chosen + " Semibold"
+			: null;
+
+		String mono = null;
+		for (String candidate : PREFERRED_MONO)
+		{
+			if (available.contains(candidate))
+			{
+				mono = candidate;
+				break;
+			}
+		}
+		MONO_FAMILY = mono;
+		MONO_SEMIBOLD_FAMILY = mono != null && available.contains(mono + " SemiBold")
+			? mono + " SemiBold"
 			: null;
 	}
 
@@ -94,10 +123,34 @@ final class Fonts
 	}
 
 	/**
+	 * Monospaced, for figures. Every digit occupies the same width, so a column of numbers lines
+	 * up on its decimal without any layout doing the work.
+	 */
+	static Font mono(float size)
+	{
+		return MONO_FAMILY == null
+			? new Font(Font.MONOSPACED, Font.PLAIN, Math.round(size))
+			: new Font(MONO_FAMILY, Font.PLAIN, Math.round(size));
+	}
+
+	static Font monoBold(float size)
+	{
+		if (MONO_SEMIBOLD_FAMILY != null)
+		{
+			return new Font(MONO_SEMIBOLD_FAMILY, Font.PLAIN, Math.round(size));
+		}
+		return MONO_FAMILY == null
+			? new Font(Font.MONOSPACED, Font.BOLD, Math.round(size))
+			: new Font(MONO_FAMILY, Font.BOLD, Math.round(size));
+	}
+
+	/**
 	 * @return the resolved family, for logging at startup
 	 */
 	static String describe()
 	{
-		return FAMILY == null ? "RuneLite default" : FAMILY + (SEMIBOLD_FAMILY != null ? " (+ Semibold)" : "");
+		String sans = FAMILY == null ? "RuneLite default" : FAMILY;
+		String monoName = MONO_FAMILY == null ? "logical monospaced" : MONO_FAMILY;
+		return sans + " + " + monoName;
 	}
 }

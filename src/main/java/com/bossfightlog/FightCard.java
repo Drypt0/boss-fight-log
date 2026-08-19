@@ -28,10 +28,14 @@ import net.runelite.client.ui.PluginPanel;
  */
 class FightCard extends JPanel
 {
-	private static final Font DPS_FONT = Fonts.bold(16f);
+	private static final Font DPS_FONT = Fonts.monoBold(15f);
 	private static final Font NAME_FONT = Fonts.regular(11f);
-	private static final Font TIME_FONT = Fonts.bold(13f);
-	private static final Font CAPTION_FONT = Fonts.regular(10f);
+	private static final Font TIME_FONT = Fonts.monoBold(13f);
+	/**
+	 * The supporting line is the widest thing on a card and monospaced text is wider than
+	 * proportional, so it takes a size down to survive five figure damage totals.
+	 */
+	private static final Font CAPTION_FONT = Fonts.mono(9f);
 	private static final int STRIPE_WIDTH = 3;
 
 	/**
@@ -61,7 +65,7 @@ class FightCard extends JPanel
 	{
 		return new CompoundBorder(
 			new MatteBorder(0, STRIPE_WIDTH, 0, 0, stripe),
-			new EmptyBorder(7, 9, 7, 9));
+			new EmptyBorder(5, 8, 5, 8));
 	}
 
 	/**
@@ -103,7 +107,7 @@ class FightCard extends JPanel
 	{
 		JPanel body = new JPanel(new BorderLayout());
 		body.setOpaque(false);
-		body.setBorder(new EmptyBorder(2, 0, 0, 0));
+		body.setBorder(new EmptyBorder(1, 0, 0, 0));
 
 		JPanel rateRow = new JPanel(new BorderLayout());
 		rateRow.setOpaque(false);
@@ -132,7 +136,7 @@ class FightCard extends JPanel
 			+ "<font color='" + muted + "'> &middot; " + Formats.percent(fight.getAccuracy()) + " acc</font>"
 			+ "</html>");
 		detail.setFont(CAPTION_FONT);
-		detail.setBorder(new EmptyBorder(2, 0, 0, 0));
+		detail.setBorder(new EmptyBorder(1, 0, 0, 0));
 
 		body.add(rateRow, BorderLayout.NORTH);
 		body.add(detail, BorderLayout.CENTER);

@@ -98,7 +98,7 @@ class BossFightLogPanel extends PluginPanel
 	{
 		JPanel spacer = new JPanel(new BorderLayout());
 		spacer.setOpaque(false);
-		spacer.setBorder(new EmptyBorder(0, 0, 6, 0));
+		spacer.setBorder(new EmptyBorder(0, 0, 3, 0));
 		spacer.setAlignmentX(Component.LEFT_ALIGNMENT);
 		spacer.add(card, BorderLayout.CENTER);
 		spacer.setMaximumSize(new Dimension(Integer.MAX_VALUE, spacer.getPreferredSize().height));
@@ -115,7 +115,7 @@ class BossFightLogPanel extends PluginPanel
 		titleRow.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
 		JLabel title = new JLabel("Boss Fight Log");
-		title.setFont(Fonts.bold(13f));
+		title.setFont(Fonts.bold(14f));
 		title.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
 
 		status.setFont(Fonts.regular(10f));

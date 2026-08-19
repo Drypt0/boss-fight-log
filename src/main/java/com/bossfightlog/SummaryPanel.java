@@ -26,7 +26,7 @@ import net.runelite.client.ui.FontManager;
  */
 class SummaryPanel extends JPanel
 {
-	private static final Font VALUE_FONT = Fonts.bold(17f);
+	private static final Font VALUE_FONT = Fonts.monoBold(16f);
 	private static final Font CAPTION_FONT = Fonts.caption(9f);
 
 	private final JLabel heading = new JLabel("SESSION");
