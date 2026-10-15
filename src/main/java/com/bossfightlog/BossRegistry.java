@@ -106,6 +106,8 @@ public class BossRegistry
 		"King Black Dragon",
 		"Kalphite Queen",
 		"Corporeal Beast",
+		"Zulrah",
+		"Vorkath",
 		"Giant Mole",
 		"Obor",
 		"Bryophyta",
